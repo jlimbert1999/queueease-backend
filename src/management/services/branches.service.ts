@@ -57,6 +57,23 @@ export class BranchesService {
       where: { id },
       relations: { services: { category: true } },
     });
-    return branchDB.services;
+    console.log(branchDB);
+    const s = branchDB.services.reduce((acc, current) => {
+      if (current.category) {
+        if (!acc[current.category.name]) {
+          acc[current.category.name] = {
+            value: null,
+            name: current.category.name,
+            services: [{ value: current.id, name: current.name }],
+          };
+        } else {
+          acc[current.category.name]['services'].push({ value: current.id, name: current.name });
+        }
+      } else {
+        acc[current.name] = { value: current.id, name: current.name, services: [] };
+      }
+      return { ...acc };
+    }, {});
+    return Object.values(s);
   }
 }

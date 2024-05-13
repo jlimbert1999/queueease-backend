@@ -1,16 +1,17 @@
-import { ClientModule } from './client/client.module';
-import { ManagementModule } from './management/management.module';
-import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import configuration from './config/configuration';
+
+import { ManagementModule } from './management/management.module';
+import { CustomerModule } from './customer/customer.module';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './users/user.module';
 
 @Module({
   imports: [
-    ClientModule,
     ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -27,8 +28,10 @@ import configuration from './config/configuration';
       }),
       inject: [ConfigService],
     }),
+    UserModule,
     AuthModule,
     ManagementModule,
+    CustomerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

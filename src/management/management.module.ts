@@ -8,6 +8,6 @@ import { BranchController, CategoriesController, ServiceDeskController, Services
   imports: [TypeOrmModule.forFeature([Category, Branch, Officer, ServiceDesk, Service])],
   controllers: [CategoriesController, ServicesController, BranchController, ServiceDeskController],
   providers: [ServiceService, CategoryService, BranchesService, ServiceDeskService],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, BranchesService],
 })
 export class ManagementModule {}
