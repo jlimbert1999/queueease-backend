@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { ServiceRequest } from 'src/customer/entities';
 import { Category } from './';
 
 @Entity()
@@ -9,9 +10,12 @@ export class Service {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   code: string;
 
   @ManyToOne(() => Category, (category) => category.services, { nullable: true })
   category?: Category;
+
+  @OneToMany(() => ServiceRequest, (request) => request.service)
+  requests: ServiceRequest;
 }

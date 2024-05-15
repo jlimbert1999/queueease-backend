@@ -18,6 +18,9 @@ export class UserService {
       order: {
         id: 'DESC',
       },
+      relations:{
+        serviceCounter:true
+      }
     });
     return { users, length };
   }

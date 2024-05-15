@@ -1,3 +1,4 @@
+import { ServiceDeskModule } from './service-desk/service-desk.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -12,6 +13,7 @@ import { UserModule } from './users/user.module';
 
 @Module({
   imports: [
+    ServiceDeskModule,
     ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

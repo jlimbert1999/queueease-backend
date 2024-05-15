@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Branch, Service } from '../entities';
+import { Branch, Category, Service } from '../entities';
 import { ILike, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBranchDto, UpdateBranchDto } from '../dtos';
@@ -10,6 +10,7 @@ export class BranchesService {
   constructor(
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
+    @InjectRepository(Category) private categoryRepository: Repository<Category>,
   ) {}
 
   async create(branchDto: CreateBranchDto) {
@@ -57,12 +58,10 @@ export class BranchesService {
       where: { id },
       relations: { services: { category: true } },
     });
-    console.log(branchDB);
     const s = branchDB.services.reduce((acc, current) => {
       if (current.category) {
         if (!acc[current.category.name]) {
           acc[current.category.name] = {
-            value: null,
             name: current.category.name,
             services: [{ value: current.id, name: current.name }],
           };

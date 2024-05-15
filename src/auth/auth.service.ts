@@ -1,12 +1,11 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { UpdateAuthDto } from './dto/update-auth.dto';
-import { AuthDto } from './dto/auth.dto';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
-import * as bcrypt from 'bcrypt';
-import { JwtPayload } from './interfaces/jwt.interface';
 import { JwtService } from '@nestjs/jwt';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { AuthDto } from './dto/auth.dto';
+import { User, UserRole } from 'src/users/entities/user.entity';
+import { JwtPayload } from './interfaces/jwt.interface';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +20,15 @@ export class AuthService {
     if (!bcrypt.compareSync(password, userDB.password)) {
       throw new BadRequestException('Usuario o Contraseña incorrectos');
     }
+    return {
+      token: this._generateToken(userDB),
+      redirectTo: this._generateRoute(userDB),
+    };
+  }
+
+  async checkAuthStatus(id_user: number) {
+    const userDB = await this.userRepository.findOneBy({ id: id_user });
+    if (!userDB) throw new UnauthorizedException();
     return { token: this._generateToken(userDB) };
   }
 
@@ -32,19 +40,9 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  private _generateRoute(user: User) {
+    if (user.roles.includes(UserRole.ADMIN)) return 'administration';
+    if (user.roles.includes(UserRole.OFFICER)) return 'queue';
+    return '';
   }
 }

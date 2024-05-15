@@ -1,5 +1,5 @@
-import { Officer, Service, ServiceDesk } from 'src/management/entities';
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Service, ServiceCounter } from 'src/management/entities';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
 
 enum CustomerStatus {
   ATTENDED = 'attended',
@@ -8,7 +8,7 @@ enum CustomerStatus {
 }
 
 @Entity()
-export class Request {
+export class ServiceRequest {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -24,15 +24,9 @@ export class Request {
   @Column({ type: 'enum', enum: CustomerStatus, default: CustomerStatus.PENDING })
   status: string;
 
-  @OneToOne(() => Service)
-  @JoinColumn()
+  @ManyToOne(() => Service, (service) => service.requests, { nullable: true })
   service: Service;
 
-  @OneToOne(() => ServiceDesk)
-  @JoinColumn()
-  desk: ServiceDesk;
-
-  @OneToOne(() => Officer)
-  @JoinColumn()
-  officer: Officer;
+  @ManyToOne(() => ServiceCounter, (serviceCounter) => serviceCounter.requests, { nullable: true })
+  desk: ServiceCounter;
 }

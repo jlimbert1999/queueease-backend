@@ -1,30 +1,27 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { Branch, Service, ServiceDesk } from '../entities';
+import { Branch, Service, ServiceCounter } from '../entities';
 import { CreateServiceDeskDto, UpdateServiceDeskDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
 
 @Injectable()
 export class ServiceDeskService {
   constructor(
-    @InjectRepository(ServiceDesk) private deskRepository: Repository<ServiceDesk>,
+    @InjectRepository(ServiceCounter) private deskRepository: Repository<ServiceCounter>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
   ) {}
 
   async create(serviceDeskDto: CreateServiceDeskDto) {
-    const { services, branch, password, ...props } = serviceDeskDto;
+    const { services, branch, ...props } = serviceDeskDto;
     const branchDB = await this.branchRepository.findOne({
       where: { id: branch },
       relations: { services: true },
     });
     const validServices = await this._checkAllowedServices(branchDB, services);
-    const encryptedPassword = this._encryptPassword(password);
     const newDesk = this.deskRepository.create({
       ...props,
-      password: encryptedPassword,
       services: validServices,
       branch: branchDB,
     });
@@ -59,10 +56,5 @@ export class ServiceDeskService {
     const isInvalid = assignedServices.some((el) => !allowedServices.includes(el));
     if (isInvalid) throw new BadRequestException('No se puede asignar un servicio de otra sucursal');
     return await this.serviceRepository.find({ where: { id: In(assignedServices) } });
-  }
-
-  private _encryptPassword(password: string): string {
-    const salt = bcrypt.genSaltSync();
-    return bcrypt.hashSync(password, salt);
   }
 }
