@@ -10,6 +10,7 @@ import { ManagementModule } from './management/management.module';
 import { CustomerModule } from './customer/customer.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './users/user.module';
+import { GroupwareModule } from './groupware/groupware.module';
 
 @Module({
   imports: [
@@ -24,7 +25,6 @@ import { UserModule } from './users/user.module';
         database: configService.get('DATABASE_NAME'),
         username: configService.get('DATABASE_USER'),
         password: configService.get('DATABASE_PASSWORD'),
-        entities: [],
         autoLoadEntities: true,
         synchronize: true,
       }),
@@ -34,6 +34,7 @@ import { UserModule } from './users/user.module';
     AuthModule,
     ManagementModule,
     CustomerModule,
+    GroupwareModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { ServiceDeskService } from '../services';
+import { ServiceCounterService } from '../services';
 import { PaginationParamsDto } from 'src/common/dtos';
 import { CreateServiceDeskDto, UpdateServiceDeskDto } from '../dtos';
 
 @Controller('service-desks')
-export class ServiceDeskController {
-  constructor(private serviceDeskService: ServiceDeskService) {}
+export class ServiceCounterController {
+  constructor(private serviceDeskService: ServiceCounterService) {}
 
   @Get()
   findAll(@Query() params: PaginationParamsDto) {

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { ServiceRequest } from '../entities';
 import { CreateRequestServiceDto } from '../dtos';
-import { Service } from 'src/management/entities';
+import { Branch, Service } from 'src/management/entities';
 
 @Injectable()
 export class ServiceRequestService {
@@ -13,15 +13,23 @@ export class ServiceRequestService {
   ) {}
 
   async create(requestDto: CreateRequestServiceDto) {
-    const serviceDB = await this.serviceRepository.findOneBy({ id: requestDto.service });
+    const { branch, service } = requestDto;
+    const serviceDB = await this.serviceRepository.findOne({ where: { id: service }, relations: { branch: true } });
     if (!serviceDB) throw new BadRequestException('El servicio solicitado no existe');
-    const code = await this._generateRequestCode(serviceDB);
-    const newRequest = this.requestRepository.create({ ...requestDto, service: serviceDB, code: code });
+    const branchDB = serviceDB.branch.find((el) => el.id === branch);
+    if (!branchDB) throw new BadRequestException('La sucursa no tiene el servicio seleccionado');
+    const code = await this._generateRequestCode(serviceDB, branchDB);
+    const newRequest = this.requestRepository.create({
+      ...requestDto,
+      service: serviceDB,
+      code: code,
+      branch: branchDB,
+    });
     const createdRequest = await this.requestRepository.save(newRequest);
-    return { code: createdRequest.code, date: createdRequest.date, name: serviceDB.name };
+    return { name: serviceDB.name, createdRequest };
   }
 
-  private async _generateRequestCode(service: Service) {
+  private async _generateRequestCode(service: Service, branch: Branch) {
     const currentDate = new Date();
 
     const startDate = new Date(currentDate);
@@ -32,6 +40,7 @@ export class ServiceRequestService {
 
     const correlative = await this.requestRepository.countBy({
       service: service,
+      branch: branch,
       date: Between(startDate, endDate),
     });
     return `${service.code}-${correlative + 1}`;

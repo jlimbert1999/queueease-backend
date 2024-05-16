@@ -27,16 +27,24 @@ export class AuthService {
   }
 
   async checkAuthStatus(id_user: number) {
-    const userDB = await this.userRepository.findOneBy({ id: id_user });
+    const userDB = await this.userRepository.findOne({ where: { id: id_user }, relations: { serviceCounter: true } });
     if (!userDB) throw new UnauthorizedException();
     return { token: this._generateToken(userDB) };
   }
 
   private _generateToken(user: User): string {
+    const { serviceCounter } = user;
     const payload: JwtPayload = {
       id_user: user.id,
       fullname: user.fullname,
+      ...(serviceCounter && {
+        serviceCounter: {
+          id_branch: serviceCounter.branch.id,
+          service: serviceCounter.services.map((el) => el.id),
+        },
+      }),
     };
+    console.log(payload);
     return this.jwtService.sign(payload);
   }
 

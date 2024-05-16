@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany } from 'typeorm';
 import { ServiceRequest } from 'src/customer/entities';
-import { Category } from './';
+import { Branch, Category } from './';
 
 @Entity()
 export class Service {
@@ -18,4 +18,7 @@ export class Service {
 
   @OneToMany(() => ServiceRequest, (request) => request.service)
   requests: ServiceRequest;
+
+  @ManyToMany(() => Branch, (branch) => branch.services)
+  branch: Branch[];
 }

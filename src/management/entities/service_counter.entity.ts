@@ -27,7 +27,7 @@ export class ServiceCounter {
   @Column()
   number: number;
 
-  @ManyToOne(() => Branch, (branch) => branch.serviceCounter, { eager: true })
+  @ManyToOne(() => Branch, (branch) => branch.serviceCounter, { eager: true, nullable: false })
   branch: Branch;
 
   @ManyToMany(() => Service, { eager: true })
