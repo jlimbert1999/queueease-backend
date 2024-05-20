@@ -1,6 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
-import { Service, ServiceCounter } from './';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany } from 'typeorm';
 import { ServiceRequest } from 'src/customer/entities';
+import { Service, Counter } from './';
 
 @Entity()
 export class Branch {
@@ -10,12 +10,11 @@ export class Branch {
   @Column()
   name: string;
 
-  @ManyToMany(() => Service, (service) => service.branch)
-  @JoinTable({ name: 'branch_service' })
+  @ManyToMany(() => Service, (service) => service.branches)
   services: Service[];
 
-  @OneToMany(() => ServiceCounter, (serviceDesk) => serviceDesk.branch)
-  serviceCounter: ServiceCounter[];
+  @OneToMany(() => Counter, (counter) => counter.branch)
+  counters: Counter[];
 
   @OneToMany(() => ServiceRequest, (serviceRequest) => serviceRequest.branch)
   serviceRequests: ServiceRequest[];

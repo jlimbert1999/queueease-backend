@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { Branch, Service, ServiceCounter } from '../entities';
+import { Branch, Service, Counter } from '../entities';
 import { CreateServiceDeskDto, UpdateServiceDeskDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
 
 @Injectable()
 export class ServiceCounterService {
   constructor(
-    @InjectRepository(ServiceCounter) private deskRepository: Repository<ServiceCounter>,
+    @InjectRepository(Counter) private deskRepository: Repository<Counter>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
   ) {}

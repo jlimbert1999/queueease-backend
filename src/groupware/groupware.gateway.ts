@@ -1,10 +1,9 @@
 import { WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer } from '@nestjs/websockets';
-import { GroupwareService } from './groupware.service';
-
 import { Server, Socket } from 'socket.io';
-import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
-import { JwtService } from '@nestjs/jwt';
+
+import { GroupwareService } from './groupware.service';
 import { ServiceRequest } from 'src/customer/entities';
+
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -12,20 +11,12 @@ import { ServiceRequest } from 'src/customer/entities';
 })
 export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
-  constructor(
-    private groupwareService: GroupwareService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private groupwareService: GroupwareService) {}
 
   handleConnection(client: Socket) {
-    try {
-      const token = client.handshake.auth.token;
-      const decoded: JwtPayload = this.jwtService.verify(token);
-      this.groupwareService.onClientConnected(client.id, decoded);
-      this.server.emit('listar', this.groupwareService.getClients());
-    } catch (error) {
-      client.disconnect();
-    }
+    const token = client.handshake.auth.token;
+    if (!token) return;
+    this.groupwareService.onClientConnected(client.id, token);
   }
 
   handleDisconnect(client: Socket) {
@@ -34,11 +25,21 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   sendServiceRequests(request: ServiceRequest) {
-    const users = this.groupwareService.getUsersForServiceRequest(request);
+    const users = this.groupwareService.getClientsForServiceRequest(request);
     users.forEach((user) => {
       user.socketIds.forEach((socketId) => {
         this.server.to(socketId).emit('new-request', request);
       });
     });
+  }
+
+  sendNextRequest(request: ServiceRequest) {
+    const clients = this.groupwareService.getClientsForServiceRequest(request);
+    clients.forEach((user) => {
+      user.socketIds.forEach((socketId) => {
+        this.server.to(socketId).emit('next-request', request);
+      });
+    });
+    this.server.emit('attention', request);
   }
 }

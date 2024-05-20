@@ -1,10 +1,11 @@
-import { Branch, Service, ServiceCounter } from 'src/management/entities';
+import { Branch, Service, Counter } from 'src/management/entities';
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
 
-export enum CustomerStatus {
+export enum RequestStatus {
   ATTENDED = 'attended',
   PENDING = 'pending',
   ABSENT = 'absent',
+  SERVICING = 'servicing',
 }
 
 @Entity()
@@ -21,15 +22,15 @@ export class ServiceRequest {
   @CreateDateColumn()
   date: Date;
 
-  @Column({ type: 'enum', enum: CustomerStatus, default: CustomerStatus.PENDING })
+  @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
   status: string;
 
-  @ManyToOne(() => Service, (service) => service.requests, { nullable: false })
+  @ManyToOne(() => Service, (service) => service.serviceRequests)
   service: Service;
 
-  @ManyToOne(() => Branch, (branch) => branch.serviceRequests, { nullable: false })
+  @ManyToOne(() => Branch, (branch) => branch.serviceRequests)
   branch: Branch;
 
-  @ManyToOne(() => ServiceCounter, (serviceCounter) => serviceCounter.requests, { nullable: true })
-  desk: ServiceCounter;
+  @ManyToOne(() => Counter, { nullable: true })
+  counter: Counter;
 }

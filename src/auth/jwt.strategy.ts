@@ -21,8 +21,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
   async validate(payload: JwtPayload): Promise<User> {
     const { id_user } = payload;
-    const userDB = await this.userRepository.findOne({ where: { id: id_user }, relations: { serviceCounter: true } });
+    const userDB = await this.userRepository.findOne({
+      where: { id: id_user },
+      relations: { counter: true },
+    });
     if (!userDB) throw new UnauthorizedException('Token invalido, vuelva a iniciar sesion');
+    delete userDB.password
     return userDB;
   }
 }

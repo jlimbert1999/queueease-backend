@@ -20,9 +20,9 @@ export class CustomerController {
   }
 
   @Post('request')
-  async createRequest(@Body() request: CreateRequestServiceDto) {
-    const { name, createdRequest } = await this.requestService.create(request);
-    this.groupwareGateway.sendServiceRequests(createdRequest);
-    return { code: createdRequest.code, date: createdRequest.date, name: name };
+  async createRequest(@Body() data: CreateRequestServiceDto) {
+    const { serviceRequest, name } = await this.requestService.create(data);
+    // this.groupwareGateway.sendServiceRequests(createdRequest);
+    return { code: serviceRequest.code, date: serviceRequest.date, name: name };
   }
 }

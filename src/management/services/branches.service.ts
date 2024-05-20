@@ -37,7 +37,7 @@ export class BranchesService {
         id: 'DESC',
       },
       relations: {
-        services: true,
+        services:true
       },
     });
   }

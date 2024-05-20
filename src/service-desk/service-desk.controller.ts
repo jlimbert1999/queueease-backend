@@ -1,19 +1,24 @@
 import { Controller, Get } from '@nestjs/common';
-import { ServiceDeskService } from './service_desk.service';
 import { UserRequest } from 'src/auth/decorators';
 import { User } from 'src/users/entities/user.entity';
-import { GroupwareService } from 'src/groupware/groupware.service';
+import { GroupwareGateway } from 'src/groupware/groupware.gateway';
+import { CounterService } from './counter.service';
 
 @Controller('service-desk')
 export class ServiceDeskController {
   constructor(
-    private serviceDeskService: ServiceDeskService,
-    private groupwareService: GroupwareService,
+    private counterService: CounterService,
+    private groupwareGateway: GroupwareGateway,
   ) {}
 
   @Get()
   getServiceRequests(@UserRequest() user: User) {
-    return this.serviceDeskService.getServiceRequests(user);
+    return this.counterService.getServiceRequests(user);
   }
 
+  @Get('next')
+  async getNextRequest(@UserRequest() user: User) {
+    const request = await this.counterService.getNextRequest(user);
+    this.groupwareGateway.sendNextRequest(request);
+  }
 }

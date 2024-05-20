@@ -13,20 +13,24 @@ export class ServiceRequestService {
   ) {}
 
   async create(requestDto: CreateRequestServiceDto) {
-    const { branch, service } = requestDto;
-    const serviceDB = await this.serviceRepository.findOne({ where: { id: service }, relations: { branch: true } });
-    if (!serviceDB) throw new BadRequestException('El servicio solicitado no existe');
-    const branchDB = serviceDB.branch.find((el) => el.id === branch);
-    if (!branchDB) throw new BadRequestException('La sucursa no tiene el servicio seleccionado');
-    const code = await this._generateRequestCode(serviceDB, branchDB);
+    const { id_branch, id_service, priority } = requestDto;
+    const service = await this.serviceRepository.findOne({
+      where: { id: id_service },
+      relations: { branches: true },
+      select: { branches: { id: true } },
+    });
+    if (!service) throw new BadRequestException('El servicio solicitado no existe');
+    const branch = service.branches.find((el) => el.id === id_branch);
+    if (!branch) throw new BadRequestException('La sucursal no tiene el servicio seleccionado');
+    const code = await this._generateRequestCode(service, branch);
     const newRequest = this.requestRepository.create({
-      ...requestDto,
-      service: serviceDB,
+      priority: priority,
+      service: service,
+      branch: branch,
       code: code,
-      branch: branchDB,
     });
     const createdRequest = await this.requestRepository.save(newRequest);
-    return { name: serviceDB.name, createdRequest };
+    return { name: service.name, serviceRequest: createdRequest };
   }
 
   private async _generateRequestCode(service: Service, branch: Branch) {
@@ -43,6 +47,6 @@ export class ServiceRequestService {
       branch: branch,
       date: Between(startDate, endDate),
     });
-    return `${service.code}-${correlative + 1}`;
+    return `${service.code.trim()}${correlative + 1}`;
   }
 }

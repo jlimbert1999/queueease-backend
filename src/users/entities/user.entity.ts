@@ -1,4 +1,4 @@
-import { ServiceCounter } from 'src/management/entities';
+import { Counter } from 'src/management/entities';
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne } from 'typeorm';
 
 export enum UserRole {
@@ -28,6 +28,6 @@ export class User {
   @Column()
   password: string;
 
-  @OneToOne(() => ServiceCounter, (serviceCounter) => serviceCounter.user, { nullable: true })
-  serviceCounter: ServiceCounter | null;
+  @OneToOne(() => Counter, (counter) => counter.user, { nullable: true })
+  counter: Counter;
 }
