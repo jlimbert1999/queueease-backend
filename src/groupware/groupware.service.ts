@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 import { ServiceRequest } from 'src/customer/entities';
 import { UserSocket } from './interfaces/user-socket.interface';
@@ -8,17 +7,15 @@ import { UserSocket } from './interfaces/user-socket.interface';
 export class GroupwareService {
   private clients: Record<string, UserSocket> = {};
 
-  constructor(private jwtService: JwtService) {}
+  constructor() {}
 
-  onClientConnected(id_socket: string, token: string): void {
-    const decoded: JwtPayload = this.jwtService.verify(token);
-    if (!decoded.counter) return;
-    if (this.clients[decoded.id_user]) {
-      this.clients[decoded.id_user].socketIds.push(id_socket);
+  onClientConnected(id_socket: string, payload: JwtPayload): void {
+    if (this.clients[payload.id_user]) {
+      this.clients[payload.id_user].socketIds.push(id_socket);
       return;
     }
-    this.clients[decoded.id_user] = {
-      ...decoded,
+    this.clients[payload.id_user] = {
+      ...payload,
       socketIds: [id_socket],
     };
   }
