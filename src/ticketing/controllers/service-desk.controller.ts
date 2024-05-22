@@ -2,8 +2,11 @@ import { Controller, Get } from '@nestjs/common';
 import { UserRequest } from 'src/auth/decorators';
 import { User } from 'src/users/entities/user.entity';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
-import { CounterService } from './counter.service';
+import { onlyAssignedCounter } from '../decorators/only-assigned-counter.decorator';
+import { CounterService } from '../services';
 
+
+@onlyAssignedCounter()
 @Controller('service-desk')
 export class ServiceDeskController {
   constructor(

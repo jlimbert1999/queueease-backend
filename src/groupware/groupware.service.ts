@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
-import { ServiceRequest } from 'src/customer/entities';
 import { UserSocket } from './interfaces/user-socket.interface';
+import { ServiceRequest } from 'src/ticketing/entities';
 
 @Injectable()
 export class GroupwareService {
@@ -32,8 +32,8 @@ export class GroupwareService {
   }
 
   getClientsForServiceRequest({ branch, service }: ServiceRequest) {
-    return Object.values(this.clients).filter(
-      ({ counter }) => counter.id_branch === branch.id && counter.services.includes(service.id),
-    );
+    return Object.values(this.clients)
+      .filter((el) => el.counter)
+      .filter(({ counter }) => counter.id_branch === branch.id && counter.services.includes(service.id));
   }
 }

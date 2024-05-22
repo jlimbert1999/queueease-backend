@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 
 import { GroupwareService } from './groupware.service';
-import { ServiceRequest } from 'src/customer/entities';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
+import { ServiceRequest } from 'src/ticketing/entities';
 
 @WebSocketGateway({
   cors: {
@@ -27,8 +27,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     } catch (error) {
       console.log('access to panel public');
     }
-
-    this.groupwareService.onClientConnected(client.id, token);
+    console.log(this.groupwareService.getClients());
   }
 
   handleDisconnect(client: Socket) {

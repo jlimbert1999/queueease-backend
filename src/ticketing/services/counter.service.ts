@@ -1,17 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RequestStatus, ServiceRequest } from 'src/customer/entities';
-import { User } from 'src/users/entities/user.entity';
 import { In, Repository } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { RequestStatus, ServiceRequest } from '../entities';
 
 @Injectable()
 export class CounterService {
   constructor(@InjectRepository(ServiceRequest) private requestRepository: Repository<ServiceRequest>) {}
 
   async getServiceRequests(user: User) {
-    const services = user.counter?.services.map((el) => el.id);
     return await this.requestRepository.find({
-      where: { status: RequestStatus.PENDING, service: In(services), branch: user.counter.branch },
+      where: {
+        branch: user.counter.branch,
+        status: RequestStatus.PENDING,
+        service: In(user.counter.services.map((el) => el.id)),
+      },
       order: {
         priority: 'DESC',
         id: 'DESC',

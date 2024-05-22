@@ -1,4 +1,3 @@
-import { ServiceDeskModule } from './service-desk/service-desk.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -7,14 +6,13 @@ import { AppService } from './app.service';
 import configuration from './config/configuration';
 
 import { ManagementModule } from './management/management.module';
-import { CustomerModule } from './customer/customer.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './users/user.module';
 import { GroupwareModule } from './groupware/groupware.module';
+import { TicketingModule } from './ticketing/ticketing.module';
 
 @Module({
   imports: [
-    ServiceDeskModule,
     ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -30,11 +28,11 @@ import { GroupwareModule } from './groupware/groupware.module';
       }),
       inject: [ConfigService],
     }),
-    UserModule,
     AuthModule,
-    ManagementModule,
-    CustomerModule,
+    UserModule,
     GroupwareModule,
+    TicketingModule,
+    ManagementModule,
   ],
   controllers: [AppController],
   providers: [AppService],

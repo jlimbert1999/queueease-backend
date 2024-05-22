@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, JoinTable } from 'typeorm';
-import { ServiceRequest } from 'src/customer/entities';
 import { Branch, Category } from './';
+import { ServiceRequest } from 'src/ticketing/entities';
 
 @Entity()
 export class Service {

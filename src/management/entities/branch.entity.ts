@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany } from 'typeorm';
-import { ServiceRequest } from 'src/customer/entities';
 import { Service, Counter } from './';
+import { ServiceRequest } from 'src/ticketing/entities';
 
 @Entity()
 export class Branch {

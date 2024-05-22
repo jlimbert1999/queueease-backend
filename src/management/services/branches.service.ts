@@ -58,7 +58,7 @@ export class BranchesService {
       where: { id },
       relations: { services: { category: true } },
     });
-    const s = branchDB.services.reduce((acc, current) => {
+    const menu = branchDB.services.reduce((acc, current) => {
       if (current.category) {
         if (!acc[current.category.name]) {
           acc[current.category.name] = {
@@ -73,6 +73,6 @@ export class BranchesService {
       }
       return { ...acc };
     }, {});
-    return Object.values(s);
+    return Object.values(menu);
   }
 }
