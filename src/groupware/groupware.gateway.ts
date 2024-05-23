@@ -38,6 +38,7 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
   sendServiceRequests(request: ServiceRequest) {
     const users = this.groupwareService.getClientsForServiceRequest(request);
     users.forEach((user) => {
+      console.log(`Enviando servicio ${request.code} a ${user.fullname}`);
       user.socketIds.forEach((socketId) => {
         this.server.to(socketId).emit('new-request', request);
       });

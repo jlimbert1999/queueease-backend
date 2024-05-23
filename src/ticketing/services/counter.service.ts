@@ -15,6 +15,8 @@ export class CounterService {
         status: RequestStatus.PENDING,
         service: In(user.counter.services.map((el) => el.id)),
       },
+      select: { service: { name: true } },
+      relations: { service: true },
       order: {
         priority: 'DESC',
         id: 'DESC',

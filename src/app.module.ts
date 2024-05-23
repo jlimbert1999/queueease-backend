@@ -1,6 +1,6 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import configuration from './config/configuration';
@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './users/user.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { TicketingModule } from './ticketing/ticketing.module';
+
 
 @Module({
   imports: [
@@ -35,6 +36,6 @@ import { TicketingModule } from './ticketing/ticketing.module';
     ManagementModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, Logger],
 })
 export class AppModule {}
