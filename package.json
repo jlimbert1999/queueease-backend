@@ -40,7 +40,6 @@
     "prettier": "^3.2.5",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "say": "^0.16.0",
     "typeorm": "^0.3.20",
     "winston": "^3.13.0"
   },

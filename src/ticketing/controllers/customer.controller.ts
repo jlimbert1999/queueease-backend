@@ -4,7 +4,6 @@ import { BranchesService } from 'src/management/services';
 import { Public } from 'src/auth/decorators';
 import { ServiceRequestService } from '../services';
 import { CreateRequestServiceDto } from '../dtos';
-import * as say from 'say';
 
 @Public()
 @Controller('customers')
@@ -17,11 +16,11 @@ export class CustomerController {
 
   @Get('menu/:id_branch')
   getMenu(@Param('id_branch') id_branch: string) {
-    say.export('FICHA, ACH22, PASE A LA VENTANILLA, 4?', null, 0.9, 'hal.wav', (err) => {
-      if (err) {
-        return console.error(err);
-      }
-    });
+    // say.speak('FICHA, ACH22, PASE A LA VENTANILLA, 4?', null, 0.8, (err) => {
+    //   if (err) {
+    //     return console.error(err);
+    //   }
+    // });
     return this.branchService.getMenu(+id_branch);
   }
 

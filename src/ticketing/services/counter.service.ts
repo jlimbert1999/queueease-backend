@@ -36,11 +36,10 @@ export class CounterService {
   }
 
   async getNextRequest(user: User) {
-    const services = user.counter?.services.map((el) => el.id);
     const request = await this.requestRepository.findOne({
       where: {
         status: RequestStatus.PENDING,
-        service: In(services),
+        service: In(user.counter.services.map((el) => el.id)),
         branch: user.counter.branch,
       },
       relations: { branch: true, service: true },
