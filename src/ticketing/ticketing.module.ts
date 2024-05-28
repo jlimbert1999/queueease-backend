@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GroupwareModule } from 'src/groupware/groupware.module';
 import { ManagementModule } from 'src/management/management.module';
-import { CounterService, ServiceRequestService } from './services';
 import { ServiceDeskController, CustomerController } from './controllers';
+import { CounterService, ServiceRequestService } from './services';
 import { ServiceRequest } from './entities';
 
 @Module({

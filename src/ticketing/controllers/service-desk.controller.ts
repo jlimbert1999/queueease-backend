@@ -21,7 +21,7 @@ export class ServiceDeskController {
 
   @Get('next')
   async getNextRequest(@UserRequest() user: User) {
-    const request = await this.counterService.getNextRequest(user);
+    const request = await this.counterService.handleRequest(user);
     this.groupwareGateway.sendNextRequest(request);
   }
 }

@@ -35,14 +35,13 @@ export class CounterService {
     });
   }
 
-  async getNextRequest(user: User) {
+  async handleRequest(user: User) {
     const request = await this.requestRepository.findOne({
       where: {
         status: RequestStatus.PENDING,
         service: In(user.counter.services.map((el) => el.id)),
         branch: user.counter.branch,
       },
-      relations: { branch: true, service: true },
       order: {
         priority: 'DESC',
         id: 'DESC',
@@ -51,11 +50,10 @@ export class CounterService {
     if (!request) {
       throw new BadRequestException('No hay solicitudes en cola');
     }
-    return request;
-    // return await this.requestRepository.save({
-    //   ...request,
-    //   status: RequestStatus.SERVICING,
-    //   desk: user.serviceCounter,
-    // });
+    await this.requestRepository.update(request.id, { counter: user.counter });
+    return await this.requestRepository.findOne({
+      where: { id: request.id },
+      relations: { branch: true, service: true },
+    });
   }
 }
