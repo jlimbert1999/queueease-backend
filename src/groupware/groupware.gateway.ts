@@ -7,15 +7,17 @@ import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 import { ServiceRequest } from 'src/ticketing/entities';
 
 @WebSocketGateway({
+  namespace: 'users',
   cors: {
     origin: '*',
   },
 })
 export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
+
   constructor(
-    private groupwareService: GroupwareService,
     private jwtService: JwtService,
+    private groupwareService: GroupwareService,
   ) {}
 
   handleConnection(client: Socket) {
@@ -25,9 +27,8 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
       const decoded: JwtPayload = this.jwtService.verify(token);
       this.groupwareService.onClientConnected(client.id, decoded);
     } catch (error) {
-      console.log('access to panel public');
+      client.disconnect();
     }
-    console.log(this.groupwareService.getClients());
   }
 
   handleDisconnect(client: Socket) {

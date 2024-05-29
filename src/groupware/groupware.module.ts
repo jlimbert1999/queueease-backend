@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
 import { GroupwareService } from './groupware.service';
 import { GroupwareGateway } from './groupware.gateway';
+import { BranchConnectionService } from './services/branch-connection.service';
+import { BranchGateway } from './branch.gateway';
 
 @Module({
-  providers: [GroupwareGateway, GroupwareService],
+  providers: [GroupwareGateway, GroupwareService, BranchConnectionService, BranchGateway],
   imports: [AuthModule],
-  exports: [GroupwareGateway, GroupwareService],
+  exports: [BranchGateway, GroupwareGateway, GroupwareService],
 })
 export class GroupwareModule {}
