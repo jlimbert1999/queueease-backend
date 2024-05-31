@@ -33,7 +33,7 @@ export class UserService {
     return this._removePasswordField(createdUser);
   }
 
-  async update(id: number, user: UpdateUserDto) {
+  async update(id: string, user: UpdateUserDto) {
     const userDB = await this.userRepository.findOneBy({ id });
     if (!userDB) throw new NotFoundException(`El usuario editado no existe`);
     if (user.login !== userDB.login) await this._checkDuplicateLogin(user.login);

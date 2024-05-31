@@ -39,7 +39,7 @@ export class ServiceService {
     return await this.serviceRepository.save(newService);
   }
 
-  async update(id: number, updateServiceDto: UpdateServiceDto) {
+  async update(id: string, updateServiceDto: UpdateServiceDto) {
     const { category, ...toUpdate } = updateServiceDto;
     const serviceDB = await this.serviceRepository.findOneBy({ id });
     if (!serviceDB) throw new NotFoundException(`El servicio editado no existe`);

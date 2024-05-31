@@ -22,7 +22,7 @@ export class ServicesController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() category: UpdateServiceDto) {
-    return this.servicesService.update(+id, category);
+    return this.servicesService.update(id, category);
   }
 
   @Get('categories')

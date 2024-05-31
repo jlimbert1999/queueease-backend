@@ -21,7 +21,7 @@ export class CustomerController {
     //     return console.error(err);
     //   }
     // });
-    return this.branchService.getMenu(+id_branch);
+    return this.branchService.getMenu(id_branch);
   }
 
   @Post('request')

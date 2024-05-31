@@ -26,7 +26,7 @@ export class AuthService {
     };
   }
 
-  async checkAuthStatus(id_user: number) {
+  async checkAuthStatus(id_user: string) {
     const userDB = await this.userRepository.findOne({ where: { id: id_user }, relations: { counter: true } });
     if (!userDB) throw new UnauthorizedException();
     return { token: this._generateToken(userDB) };

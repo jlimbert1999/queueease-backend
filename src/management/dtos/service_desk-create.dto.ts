@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsString, IsNotEmpty, IsPositive, IsInt, Min, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsPositive, IsInt, Min, IsArray, IsUUID } from 'class-validator';
 
 export class CreateServiceDeskDto {
   @IsString()
@@ -20,11 +20,10 @@ export class CreateServiceDeskDto {
   @IsNotEmpty()
   password: string;
 
-  @Type(() => Number)
-  @IsInt()
-  branch: number;
+  @IsUUID()
+  branch: string;
 
   @IsArray()
-  @IsInt({ each: true })
-  services: number[];
+  @IsString({ each: true })
+  services: string[];
 }

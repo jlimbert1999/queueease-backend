@@ -20,7 +20,7 @@ export class BranchesService {
     return await this.branchRepository.save(branch);
   }
 
-  async update(id: number, branchDto: UpdateBranchDto) {
+  async update(id: string, branchDto: UpdateBranchDto) {
     const { services, ...props } = branchDto;
     const branchDB = await this.branchRepository.findOneBy({ id });
     if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
@@ -48,12 +48,12 @@ export class BranchesService {
       take: 5,
     });
   }
-  async getServicesByBranch(id: number) {
+  async getServicesByBranch(id: string) {
     const branchDB = await this.branchRepository.findOne({ where: { id }, relations: { services: true } });
     return branchDB.services;
   }
 
-  async getMenu(id: number) {
+  async getMenu(id: string) {
     const branchDB = await this.branchRepository.findOne({
       where: { id },
       relations: { services: { category: true } },

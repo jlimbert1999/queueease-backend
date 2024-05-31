@@ -16,8 +16,8 @@ import { User } from 'src/users/entities/user.entity';
 @Entity()
 @Index(['number', 'branch'], { unique: true })
 export class Counter {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column()
   name: string;

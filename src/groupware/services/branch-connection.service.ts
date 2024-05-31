@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { BranchSocket } from '../interfaces';
 
 interface branch {
-  id: number;
+  id: string;
   name: string;
 }
 @Injectable()
 export class BranchConnectionService {
-  private branches: Record<number, BranchSocket> = {};
+  private branches: Record<string, BranchSocket> = {};
 
   onBranchConnected(id_socket: string, branch: branch) {
     if (this.branches[branch.id]) {
@@ -31,7 +31,7 @@ export class BranchConnectionService {
     return Object.values(this.branches);
   }
 
-  getBranch(id_branch: number) {
+  getBranch(id_branch: string) {
     return this.getBranches().find((branch) => branch.id === id_branch);
   }
 

@@ -1,9 +1,9 @@
 export interface JwtPayload {
-  id_user: number;
+  id_user: string;
   fullname: string;
   counter?: counter;
 }
 interface counter {
-  id_branch: number;
-  services: number[];
+  id_branch: string;
+  services: string[];
 }

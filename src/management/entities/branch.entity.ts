@@ -4,8 +4,8 @@ import { ServiceRequest } from 'src/ticketing/entities';
 
 @Entity()
 export class Branch {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column()
   name: string;

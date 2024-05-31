@@ -1,5 +1,5 @@
 export interface BranchSocket {
-  id: number;
+  id: string;
   name: string;
   socketIds: string[];
 }

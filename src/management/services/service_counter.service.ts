@@ -28,7 +28,7 @@ export class ServiceCounterService {
     return await this.deskRepository.save(newDesk);
   }
 
-  async update(id: number, serviceDeskDto: UpdateServiceDeskDto) {
+  async update(id: string, serviceDeskDto: UpdateServiceDeskDto) {
     const { services, ...props } = serviceDeskDto;
     const serviceDeskDB = await this.deskRepository.findOne({ where: { id } });
     if (!serviceDeskDB) throw new NotFoundException('La ventanilla editada no existe');
@@ -51,7 +51,7 @@ export class ServiceCounterService {
     });
   }
 
-  private async _checkAllowedServices(brach: Branch, assignedServices: number[]) {
+  private async _checkAllowedServices(brach: Branch, assignedServices: string[]) {
     const allowedServices = brach.services.map((el) => el.id);
     const isInvalid = assignedServices.some((el) => !allowedServices.includes(el));
     if (isInvalid) throw new BadRequestException('No se puede asignar un servicio de otra sucursal');

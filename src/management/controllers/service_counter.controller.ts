@@ -19,6 +19,6 @@ export class ServiceCounterController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() desk: UpdateServiceDeskDto) {
-    return this.serviceDeskService.update(+id, desk);
+    return this.serviceDeskService.update(id, desk);
   }
 }

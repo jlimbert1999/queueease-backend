@@ -19,7 +19,7 @@ export class BranchController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() category: CreateBranchDto) {
-    return this.branchService.update(+id, category);
+    return this.branchService.update(id, category);
   }
 
   @Get('availables/:term')
@@ -29,11 +29,11 @@ export class BranchController {
 
   @Get('services/:id')
   getServices(@Param('id') id: string) {
-    return this.branchService.getServicesByBranch(+id);
+    return this.branchService.getServicesByBranch(id);
   }
 
   @Get('menu/:id')
   getMenu(@Param('id') id: string) {
-    return this.branchService.getMenu(+id);
+    return this.branchService.getMenu(id);
   }
 }

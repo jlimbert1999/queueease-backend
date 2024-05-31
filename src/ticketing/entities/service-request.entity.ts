@@ -10,8 +10,8 @@ export enum RequestStatus {
 
 @Entity()
 export class ServiceRequest {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'int', default: 0 })
   priority: number;

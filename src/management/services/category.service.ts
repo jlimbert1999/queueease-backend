@@ -14,7 +14,7 @@ export class CategoryService {
     return await this.categoryRepository.save(category);
   }
 
-  async update(id: number, categoryDto: UpdateCategoryDto) {
+  async update(id: string, categoryDto: UpdateCategoryDto) {
     const categoryDB = await this.categoryRepository.findOneBy({ id });
     if (!categoryDB) throw new BadRequestException(`La categoria editada no existe`);
     return await this.categoryRepository.save({ id, ...categoryDto });

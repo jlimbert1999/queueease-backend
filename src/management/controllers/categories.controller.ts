@@ -18,6 +18,6 @@ export class CategoriesController {
   }
   @Put(':id')
   update(@Param('id') id: string, @Body() category: UpdateCategoryDto) {
-    return this.categoriesService.update(+id, category);
+    return this.categoriesService.update(id, category);
   }
 }

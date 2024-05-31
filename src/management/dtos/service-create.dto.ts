@@ -1,5 +1,4 @@
-import { Type } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateServiceDto {
   @IsString()
@@ -10,7 +9,7 @@ export class CreateServiceDto {
   @IsNotEmpty()
   code: string;
 
+  @IsUUID()
   @IsOptional()
-  @Type(() => Number)
-  category?: number;
+  category?: string;
 }

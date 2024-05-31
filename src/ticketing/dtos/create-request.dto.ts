@@ -1,14 +1,12 @@
 import { Type } from 'class-transformer';
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsUUID } from 'class-validator';
 
 export class CreateRequestServiceDto {
-  @IsNumber()
-  @Type(() => Number)
-  id_service: number;
+  @IsUUID()
+  id_service: string;
 
-  @IsNumber()
-  @Type(() => Number)
-  id_branch: number;
+  @IsUUID()
+  id_branch: string;
 
   @IsNumber()
   @Type(() => Number)
