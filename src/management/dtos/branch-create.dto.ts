@@ -1,4 +1,5 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { VideoPlatform } from '../entities';
 
 export class CreateBranchDto {
   @IsNotEmpty()
@@ -7,4 +8,13 @@ export class CreateBranchDto {
   @IsArray()
   @IsString({ each: true })
   services: string[];
+
+  @IsString()
+  videoUrl: string;
+
+  @IsEnum(VideoPlatform)
+  videoPlatform: string;
+
+  @IsString()
+  marqueeMessage: string;
 }

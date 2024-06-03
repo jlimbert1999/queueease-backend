@@ -2,6 +2,12 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany, CreateDa
 import { Service, Counter } from './';
 import { ServiceRequest } from 'src/ticketing/entities';
 
+export enum VideoPlatform {
+  LOCAL = 'Local',
+  YOUTUBE = 'YouTube',
+  FACEBOOK = 'Facebook',
+}
+
 @Entity()
 export class Branch {
   @PrimaryGeneratedColumn('uuid')
@@ -10,10 +16,10 @@ export class Branch {
   @Column()
   name: string;
 
-  @Column({ nullable: true })
+  @Column()
   videoUrl: string;
 
-  @Column({ nullable: true })
+  @Column()
   videoPlatform: string;
 
   @Column({ nullable: true })

@@ -1,16 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import { ILike, In, Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 
+import { Branch, Service, VideoPlatform } from '../entities';
 import { CreateBranchDto, UpdateBranchDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
-import { Branch, Service } from '../entities';
 
 @Injectable()
 export class BranchesService {
   constructor(
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
+    private configService: ConfigService,
   ) {}
 
   async findAll({ limit, offset }: PaginationParamsDto) {
@@ -30,7 +34,7 @@ export class BranchesService {
         },
       },
     });
-    return { branches, length };
+    return { branches: branches.map((el) => this._buildUrlVideo(el)), length };
   }
 
   async search(term: string, { limit, offset }: PaginationParamsDto) {
@@ -68,6 +72,10 @@ export class BranchesService {
     const branchDB = await this.branchRepository.findOneBy({ id });
     if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
     const serviceDB = await this.serviceRepository.find({ where: { id: In(services) } });
+    if (branchDto) {
+      if (branchDB.videoUrl === branchDto.videoUrl) return;
+      this._deleteVideoBranch(branchDB.videoUrl);
+    }
     await this.branchRepository.save({ id, ...props, services: serviceDB });
     return await this.branchRepository.findOne({ where: { id }, relations: { services: true } });
   }
@@ -100,5 +108,31 @@ export class BranchesService {
       return { ...acc };
     }, {});
     return Object.values(menu);
+  }
+
+  private _buildUrlVideo(branch: Branch): Branch {
+    let secureUrl = this.configService.getOrThrow('host');
+    switch (branch.videoPlatform) {
+      case VideoPlatform.FACEBOOK:
+        break;
+      case VideoPlatform.YOUTUBE:
+        secureUrl = `https://www.youtube.com/embed/${branch.videoUrl}?autoplay=1&playlist=${branch.videoUrl}&loop=1&muted=1`;
+        break;
+      default:
+        secureUrl = `${secureUrl}/files/branch/${branch.videoUrl}`;
+        break;
+    }
+    return { ...branch, videoUrl: secureUrl };
+  }
+
+  private _deleteVideoBranch(fileName: string): void {
+    const filePath = path.join(__dirname, '..', 'static', 'branches', fileName);
+    console.log(fileName);
+    if (!fs.existsSync(filePath)) return;
+    try {
+      fs.unlinkSync(fileName);
+    } catch (error) {
+      throw new InternalServerErrorException('Error al actualizar ');
+    }
   }
 }
