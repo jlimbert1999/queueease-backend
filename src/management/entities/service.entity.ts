@@ -1,10 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, JoinTable, CreateDateColumn } from 'typeorm';
 import { Branch, Category } from './';
 import { ServiceRequest } from 'src/ticketing/entities';
 
 @Entity()
 export class Service {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
@@ -22,4 +22,7 @@ export class Service {
 
   @OneToMany(() => ServiceRequest, (request) => request.service)
   serviceRequests: ServiceRequest[];
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

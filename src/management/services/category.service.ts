@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Category } from '../entities';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
@@ -21,13 +21,26 @@ export class CategoryService {
   }
 
   async findAll({ limit, offset }: PaginationParamsDto) {
-    return await this.categoryRepository.findAndCount({
+    const [categories, length] = await this.categoryRepository.findAndCount({
       take: limit,
       skip: offset,
       order: {
-        id: 'DESC',
+        id: 'ASC',
       },
     });
+    return { categories, length };
+  }
+
+  async search(term: string, { limit, offset }: PaginationParamsDto) {
+    const [categories, length] = await this.categoryRepository.findAndCount({
+      where: { name: ILike(`%${term}%`) },
+      take: limit,
+      skip: offset,
+      order: {
+        id: 'ASC',
+      },
+    });
+    return { categories, length };
   }
 
   async getAvailables() {

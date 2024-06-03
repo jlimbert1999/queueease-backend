@@ -1,17 +1,60 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Branch, Category, Service } from '../entities';
-import { ILike, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ILike, In, Repository } from 'typeorm';
+
 import { CreateBranchDto, UpdateBranchDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
+import { Branch, Service } from '../entities';
 
 @Injectable()
 export class BranchesService {
   constructor(
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
-    @InjectRepository(Category) private categoryRepository: Repository<Category>,
   ) {}
+
+  async findAll({ limit, offset }: PaginationParamsDto) {
+    const [branches, length] = await this.branchRepository.findAndCount({
+      take: limit,
+      skip: offset,
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: {
+        services: true,
+      },
+      select: {
+        services: {
+          id: true,
+          name: true,
+        },
+      },
+    });
+    return { branches, length };
+  }
+
+  async search(term: string, { limit, offset }: PaginationParamsDto) {
+    const [branches, length] = await this.branchRepository.findAndCount({
+      where: {
+        name: ILike(`%${term}%`),
+      },
+      relations: {
+        services: true,
+      },
+      select: {
+        services: {
+          id: true,
+          name: true,
+        },
+      },
+      take: limit,
+      skip: offset,
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+    return { branches, length };
+  }
 
   async create(branchDto: CreateBranchDto) {
     const { services, ...props } = branchDto;
@@ -29,28 +72,11 @@ export class BranchesService {
     return await this.branchRepository.findOne({ where: { id }, relations: { services: true } });
   }
 
-  async findAll({ limit, offset }: PaginationParamsDto) {
-    return await this.branchRepository.findAndCount({
-      take: limit,
-      skip: offset,
-      order: {
-        id: 'DESC',
-      },
-      relations: {
-        services: true,
-      },
-    });
-  }
-
   async searchAvailables(term: string) {
     return await this.branchRepository.find({
       where: { name: ILike(`%${term}%`) },
       take: 5,
     });
-  }
-  async getServicesByBranch(id: string) {
-    const branchDB = await this.branchRepository.findOne({ where: { id }, relations: { services: true } });
-    return branchDB.services;
   }
 
   async getMenu(id: string) {

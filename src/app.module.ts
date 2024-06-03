@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './users/user.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { TicketingModule } from './ticketing/ticketing.module';
+import { FilesModule } from './files/files.module';
 
 
 @Module({
@@ -34,6 +35,7 @@ import { TicketingModule } from './ticketing/ticketing.module';
     GroupwareModule,
     TicketingModule,
     ManagementModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],

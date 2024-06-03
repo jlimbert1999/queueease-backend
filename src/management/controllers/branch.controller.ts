@@ -12,6 +12,11 @@ export class BranchController {
     return this.branchService.findAll(params);
   }
 
+  @Get('search/:term')
+  search(@Param('term') term: string, @Query() params: PaginationParamsDto) {
+    return this.branchService.search(term, params);
+  }
+
   @Post()
   create(@Body() category: CreateBranchDto) {
     return this.branchService.create(category);
@@ -25,11 +30,6 @@ export class BranchController {
   @Get('availables/:term')
   searchAvaibles(@Param('term') term: string) {
     return this.branchService.searchAvailables(term);
-  }
-
-  @Get('services/:id')
-  getServices(@Param('id') id: string) {
-    return this.branchService.getServicesByBranch(id);
   }
 
   @Get('menu/:id')

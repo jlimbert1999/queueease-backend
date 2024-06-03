@@ -1,10 +1,10 @@
-import { IsArray, IsInt, IsNotEmpty } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateBranchDto {
   @IsNotEmpty()
   name: string;
 
   @IsArray()
-  @IsInt({ each: true })
-  services: number[];
+  @IsString({ each: true })
+  services: string[];
 }
