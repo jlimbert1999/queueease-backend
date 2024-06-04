@@ -5,6 +5,6 @@ export const fileFilter = (
 ): void => {
   if (!file) return callback(new Error('File is empty'), false);
   const fileExptension = file.mimetype.split('/')[1];
-  if ('mp4' === fileExptension) return callback(null, true);
+  if ('mp3' === fileExptension) return callback(null, true);
   callback(null, false);
 };

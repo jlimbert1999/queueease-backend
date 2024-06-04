@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany, CreateDateColumn } from 'typeorm';
-import { Service, Counter } from './';
 import { ServiceRequest } from 'src/ticketing/entities';
+import { Service, Counter } from './';
 
 export enum VideoPlatform {
   LOCAL = 'Local',
@@ -22,7 +22,7 @@ export class Branch {
   @Column()
   videoPlatform: string;
 
-  @Column({ nullable: true })
+  @Column()
   marqueeMessage: string;
 
   @ManyToMany(() => Service, (service) => service.branches)
