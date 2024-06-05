@@ -6,11 +6,11 @@ import { CreateServiceDeskDto, UpdateServiceDeskDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
 
 @Injectable()
-export class ServiceCounterService {
+export class CounterService {
   constructor(
     @InjectRepository(Counter) private deskRepository: Repository<Counter>,
-    @InjectRepository(Service) private serviceRepository: Repository<Service>,
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
+    @InjectRepository(Service) private serviceRepository: Repository<Service>,
   ) {}
 
   async create(serviceDeskDto: CreateServiceDeskDto) {

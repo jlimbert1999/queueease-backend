@@ -1,12 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany, CreateDateColumn } from 'typeorm';
 import { ServiceRequest } from 'src/ticketing/entities';
-import { Service, Counter } from './';
-
-export enum VideoPlatform {
-  LOCAL = 'Local',
-  YOUTUBE = 'YouTube',
-  FACEBOOK = 'Facebook',
-}
+import { Service, Counter, BranchVideo } from './';
 
 @Entity()
 export class Branch {
@@ -17,13 +11,10 @@ export class Branch {
   name: string;
 
   @Column()
-  videoUrl: string;
-
-  @Column()
-  videoPlatform: string;
-
-  @Column()
   marqueeMessage: string;
+
+  @OneToMany(() => BranchVideo, (branchVideo) => branchVideo.branch, { cascade: true })
+  videos: BranchVideo[];
 
   @ManyToMany(() => Service, (service) => service.branches)
   services: Service[];

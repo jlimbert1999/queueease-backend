@@ -5,7 +5,7 @@ import { ILike, In, Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { Branch, Service, VideoPlatform } from '../entities';
+import { Branch, BranchVideo, Service, VideoPlatform } from '../entities';
 import { CreateBranchDto, UpdateBranchDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
 
@@ -14,6 +14,7 @@ export class BranchesService {
   constructor(
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
+    @InjectRepository(BranchVideo) private branchVideoRepository: Repository<BranchVideo>,
     private configService: ConfigService,
   ) {}
 
@@ -21,20 +22,20 @@ export class BranchesService {
     const [branches, length] = await this.branchRepository.findAndCount({
       take: limit,
       skip: offset,
-      order: {
-        createdAt: 'DESC',
-      },
-      relations: {
-        services: true,
-      },
+      order: { createdAt: 'DESC' },
+      relations: { services: true },
       select: {
-        services: {
-          id: true,
-          name: true,
-        },
+        services: { id: true, name: true },
       },
     });
-    return { branches: branches.map((el) => this._buildUrlVideo(el)), length };
+
+    return {
+      branches: branches.map(({ videos, ...props }) => ({
+        videos: videos.map((video) => this._buildUrlVideo(video)),
+        ...props,
+      })),
+      length,
+    };
   }
 
   async search(term: string, { limit, offset }: PaginationParamsDto) {
@@ -61,23 +62,27 @@ export class BranchesService {
   }
 
   async create(branchDto: CreateBranchDto) {
-    const { services, ...props } = branchDto;
+    const { services, videos, ...props } = branchDto;
     const serviceDB = await this.serviceRepository.find({ where: { id: In(services) } });
-    const branch = this.branchRepository.create({ ...props, services: serviceDB });
+    const branch = this.branchRepository.create({
+      ...props,
+      services: serviceDB,
+      videos: videos.map(({ url, platform }) => this.branchVideoRepository.create({ url, platform })),
+    });
     return await this.branchRepository.save(branch);
   }
 
   async update(id: string, branchDto: UpdateBranchDto) {
-    const { services, ...props } = branchDto;
-    const branchDB = await this.branchRepository.findOneBy({ id });
-    if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
-    const serviceDB = await this.serviceRepository.find({ where: { id: In(services) } });
-    if (branchDto) {
-      if (branchDB.videoUrl === branchDto.videoUrl) return;
-      this._deleteVideoBranch(branchDB.videoUrl);
-    }
-    await this.branchRepository.save({ id, ...props, services: serviceDB });
-    return await this.branchRepository.findOne({ where: { id }, relations: { services: true } });
+    // const { services, ...props } = branchDto;
+    // const branchDB = await this.branchRepository.findOneBy({ id });
+    // if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
+    // const serviceDB = await this.serviceRepository.find({ where: { id: In(services) } });
+    // if (branchDto) {
+    //   if (branchDB.videoUrl === branchDto.videoUrl) return;
+    //   this._deleteVideoBranch(branchDB.videoUrl);
+    // }
+    // await this.branchRepository.save({ id, ...props, services: serviceDB });
+    // return await this.branchRepository.findOne({ where: { id }, relations: { services: true } });
   }
 
   async searchAvailables(term: string) {
@@ -110,19 +115,19 @@ export class BranchesService {
     return Object.values(menu);
   }
 
-  private _buildUrlVideo(branch: Branch): Branch {
+  private _buildUrlVideo(video: BranchVideo): string {
     let secureUrl = this.configService.getOrThrow('host');
-    switch (branch.videoPlatform) {
+    switch (video.platform) {
       case VideoPlatform.FACEBOOK:
         break;
       case VideoPlatform.YOUTUBE:
-        secureUrl = `https://www.youtube.com/embed/${branch.videoUrl}?autoplay=1&playlist=${branch.videoUrl}&loop=1&muted=1`;
+        secureUrl = `https://www.youtube.com/embed/${video.url}?autoplay=1&playlist=${video.url}&loop=1&muted=1`;
         break;
       default:
-        secureUrl = `${secureUrl}/files/branch/${branch.videoUrl}`;
+        secureUrl = `${secureUrl}/files/branch/${video.url}`;
         break;
     }
-    return { ...branch, videoUrl: secureUrl };
+    return secureUrl;
   }
 
   private _deleteVideoBranch(fileName: string): void {
