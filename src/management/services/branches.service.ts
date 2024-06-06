@@ -1,11 +1,11 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { ILike, In, Repository } from 'typeorm';
+import { DataSource, ILike, In, Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { Branch, BranchVideo, Service, VideoPlatform } from '../entities';
+import { Branch, BranchVideo, Service } from '../entities';
 import { CreateBranchDto, UpdateBranchDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
 
@@ -16,6 +16,7 @@ export class BranchesService {
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
     @InjectRepository(BranchVideo) private branchVideoRepository: Repository<BranchVideo>,
     private configService: ConfigService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async findAll({ limit, offset }: PaginationParamsDto) {
@@ -23,7 +24,7 @@ export class BranchesService {
       take: limit,
       skip: offset,
       order: { createdAt: 'DESC' },
-      relations: { services: true },
+      relations: { services: true, videos: true },
       select: {
         services: { id: true, name: true },
       },
@@ -43,9 +44,7 @@ export class BranchesService {
       where: {
         name: ILike(`%${term}%`),
       },
-      relations: {
-        services: true,
-      },
+      relations: { services: true, videos: true },
       select: {
         services: {
           id: true,
@@ -54,9 +53,6 @@ export class BranchesService {
       },
       take: limit,
       skip: offset,
-      order: {
-        createdAt: 'DESC',
-      },
     });
     return { branches, length };
   }
@@ -67,22 +63,48 @@ export class BranchesService {
     const branch = this.branchRepository.create({
       ...props,
       services: serviceDB,
-      videos: videos.map(({ url, platform }) => this.branchVideoRepository.create({ url, platform })),
+      videos: videos.map((video) => this.branchVideoRepository.create({ url: video })),
     });
     return await this.branchRepository.save(branch);
   }
 
   async update(id: string, branchDto: UpdateBranchDto) {
-    // const { services, ...props } = branchDto;
-    // const branchDB = await this.branchRepository.findOneBy({ id });
-    // if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
-    // const serviceDB = await this.serviceRepository.find({ where: { id: In(services) } });
-    // if (branchDto) {
-    //   if (branchDB.videoUrl === branchDto.videoUrl) return;
-    //   this._deleteVideoBranch(branchDB.videoUrl);
-    // }
-    // await this.branchRepository.save({ id, ...props, services: serviceDB });
-    // return await this.branchRepository.findOne({ where: { id }, relations: { services: true } });
+    const { services, videos, ...props } = branchDto;
+    const branchDB = await this.branchRepository.findOne({ where: { id }, relations: { videos: true } });
+    if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
+    const updatedServices = await this.serviceRepository.find({ where: { id: In(services) } });
+    let deletedVideos = branchDB.videos;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (videos.length > 0) {
+        await queryRunner.manager.delete(BranchVideo, { branch: { id } });
+        branchDB.videos = videos.map((video) => this.branchVideoRepository.create({ url: video }));
+      } else {
+        deletedVideos = [];
+      }
+      const toUpdate = this.branchRepository.merge(branchDB, {
+        ...props,
+        ...(updatedServices.length > 0 && { services: updatedServices }),
+      });
+      await queryRunner.manager.save(toUpdate);
+      await queryRunner.commitTransaction();
+      this._deleteVideosBranch(deletedVideos.map((el) => el.url));
+      const updatedBranch = await this.branchRepository.findOne({
+        where: { id },
+        relations: { services: true, videos: true },
+      });
+      return { ...updatedBranch, videos: updatedBranch.videos.map((video) => this._buildUrlVideo(video)) };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      this._deleteVideosBranch(videos);
+      throw new InternalServerErrorException('Error al actualizar sucursal');
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async searchAvailables(term: string) {
@@ -116,28 +138,26 @@ export class BranchesService {
   }
 
   private _buildUrlVideo(video: BranchVideo): string {
-    let secureUrl = this.configService.getOrThrow('host');
-    switch (video.platform) {
-      case VideoPlatform.FACEBOOK:
-        break;
-      case VideoPlatform.YOUTUBE:
-        secureUrl = `https://www.youtube.com/embed/${video.url}?autoplay=1&playlist=${video.url}&loop=1&muted=1`;
-        break;
-      default:
-        secureUrl = `${secureUrl}/files/branch/${video.url}`;
-        break;
-    }
-    return secureUrl;
+    const host = this.configService.getOrThrow('host');
+    return `${host}/files/branch/${video.url}`;
+
+    // switch (video.platform) {
+    //   case VideoPlatform.FACEBOOK:
+    //     break;
+    //   case VideoPlatform.YOUTUBE:
+    //     secureUrl = `https://www.youtube.com/embed/${video.url}?autoplay=1&playlist=${video.url}&loop=1&muted=1`;
+    //     break;
+    //   default:
+    //     secureUrl = `${secureUrl}/files/branch/${video.url}`;
+    //     break;
+    // }
+    // return secureUrl;
   }
 
-  private _deleteVideoBranch(fileName: string): void {
-    const filePath = path.join(__dirname, '..', 'static', 'branches', fileName);
-    console.log(fileName);
-    if (!fs.existsSync(filePath)) return;
-    try {
-      fs.unlinkSync(fileName);
-    } catch (error) {
-      throw new InternalServerErrorException('Error al actualizar ');
+  private _deleteVideosBranch(fileNames: string[]): void {
+    for (const file of fileNames) {
+      const filePath = path.join(process.cwd(), 'static', 'branches', file);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
   }
 }

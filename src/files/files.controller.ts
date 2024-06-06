@@ -1,12 +1,12 @@
-import { BadRequestException, Controller, Get, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Get, Param, Post, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { diskStorage } from 'multer';
+import { Response } from 'express';
 import { Public } from 'src/auth/decorators';
 import { fileNamer } from './helpers/file_namer.helper';
 import { fileFilter } from './helpers/file_filter.helper';
 import { FilesService } from './files.service';
-import { Response } from 'express';
 
 @Public()
 @Controller('files')
@@ -17,10 +17,10 @@ export class FilesController {
   ) {}
   @Post('branch')
   @UseInterceptors(
-    FileInterceptor('file', {
+    FilesInterceptor('files', null, {
       fileFilter: fileFilter,
       limits: {
-        fileSize: 1 * 1024 * 1024 * 1024,
+        fileSize: 2 * 1024 * 1024 * 1024,
       },
       storage: diskStorage({
         destination: './static/branches',
@@ -28,9 +28,8 @@ export class FilesController {
       }),
     }),
   )
-  uploadBranchVideo(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('Make sure that the file is an video');
-    return { file: file.filename };
+  uploadBranchVideo(@UploadedFiles() files: Express.Multer.File[]) {
+    return { files: files.map(({ filename }) => filename) };
   }
 
   @Get('branch/:imageName')
