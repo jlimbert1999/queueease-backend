@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ILike, In, IsNull, Repository } from 'typeorm';
 import { Branch, Service, Counter } from '../entities';
 import { CreateServiceDeskDto, UpdateServiceDeskDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class CounterService {
@@ -11,7 +12,21 @@ export class CounterService {
     @InjectRepository(Counter) private deskRepository: Repository<Counter>,
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
+    @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
+
+  async findAll({ limit, offset }: PaginationParamsDto) {
+    return await this.deskRepository.findAndCount({
+      take: limit,
+      skip: offset,
+      order: {
+        id: 'DESC',
+      },
+    });
+  }
+  async searchUsersForAssignment(term: string) {
+    return await this.userRepository.find({ where: { counter: IsNull(), fullname: ILike(`%${term}%`) }, take: 5 });
+  }
 
   async create(serviceDeskDto: CreateServiceDeskDto) {
     const { services, branch, ...props } = serviceDeskDto;
@@ -39,16 +54,6 @@ export class CounterService {
     const validServices = await this._checkAllowedServices(branchDB, services);
     await this.deskRepository.save({ id, ...props, services: validServices });
     return await this.deskRepository.findOne({ where: { id } });
-  }
-
-  async findAll({ limit, offset }: PaginationParamsDto) {
-    return await this.deskRepository.findAndCount({
-      take: limit,
-      skip: offset,
-      order: {
-        id: 'DESC',
-      },
-    });
   }
 
   private async _checkAllowedServices(brach: Branch, assignedServices: string[]) {

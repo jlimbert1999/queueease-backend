@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from './entities/user.entity';
@@ -21,6 +21,17 @@ export class UserService {
       relations: {
         counter: true,
       },
+    });
+    return { users, length };
+  }
+
+  async search(term: string, { limit, offset }: PaginationParamsDto) {
+    const [users, length] = await this.userRepository.findAndCount({
+      where: {
+        fullname: ILike(`%${term}%`),
+      },
+      take: limit,
+      skip: offset,
     });
     return { users, length };
   }

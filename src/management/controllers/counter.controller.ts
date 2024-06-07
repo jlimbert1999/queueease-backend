@@ -3,13 +3,18 @@ import { CounterService } from '../services';
 import { PaginationParamsDto } from 'src/common/dtos';
 import { CreateServiceDeskDto, UpdateServiceDeskDto } from '../dtos';
 
-@Controller('service-desks')
-export class ServiceCounterController {
+@Controller('counter')
+export class CounterController {
   constructor(private serviceDeskService: CounterService) {}
 
   @Get()
   findAll(@Query() params: PaginationParamsDto) {
     return this.serviceDeskService.findAll(params);
+  }
+
+  @Get('assign/:term')
+  searchUsersForAssignment(@Param('term') term: string) {
+    return this.serviceDeskService.searchUsersForAssignment(term);
   }
 
   @Post()
