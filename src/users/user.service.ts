@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, IsNull, Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from './entities/user.entity';
@@ -54,13 +54,13 @@ export class UserService {
   }
 
   async searchForAssign(term: string) {
-    return await this.userRepository.find({
-      where: {
-        fullname: ILike(`%${term}%`),
-        counter: IsNull(),
-      },
-      take: 5,
-    });
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.counter', 'counter')
+      .where('user.fullname ILIKE :term', { term: `%${term}%` })
+      .andWhere('counter IS NULL')
+      .take(5)
+      .getMany();
   }
 
   private async _encryptPassword(password: string): Promise<string> {

@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, ILike, In, Repository } from 'typeorm';
@@ -110,9 +110,14 @@ export class BranchesService {
   async searchAvailables(term: string) {
     return await this.branchRepository.find({
       where: { name: ILike(`%${term}%`) },
-      relations: { services: true },
       take: 5,
     });
+  }
+
+  async getBranchServices(id: string) {
+    const branchDB = await this.branchRepository.findOne({ where: { id: id }, relations: { services: true } });
+    if (!branchDB) throw new BadRequestException(`La sucursal ${id} no existe`);
+    return branchDB.services;
   }
 
   async getMenu(id: string) {
@@ -136,6 +141,15 @@ export class BranchesService {
       return { ...acc };
     }, {});
     return Object.values(menu);
+  }
+
+  async getBranchAdvertisement(id: string) {
+    const branch = await this.branchRepository.findOne({
+      where: { id: id },
+      relations: { videos: true },
+    });
+
+    return { message: branch.marqueeMessage, videos: branch.videos.map((el) => this._buildUrlVideo(el)) };
   }
 
   private _buildUrlVideo(video: BranchVideo): string {

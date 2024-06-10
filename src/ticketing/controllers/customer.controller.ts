@@ -24,6 +24,11 @@ export class CustomerController {
     return this.branchService.getMenu(id_branch);
   }
 
+  @Get('advertisement/:id_branch')
+  getBranchAdvertisements(@Param('id_branch') id_branch: string) {
+    return this.branchService.getBranchAdvertisement(id_branch);
+  }
+
   @Post('request')
   async createRequest(@Body() data: CreateRequestServiceDto) {
     const { serviceRequest, name } = await this.requestService.create(data);

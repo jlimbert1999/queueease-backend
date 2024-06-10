@@ -29,7 +29,7 @@ export class User {
   password: string;
 
   @OneToOne(() => Counter, (counter) => counter.user, { nullable: true })
-  counter: Counter;
+  counter?: Counter;
 
   @CreateDateColumn()
   createdAt: Date;
