@@ -1,5 +1,5 @@
 import { Counter } from 'src/management/entities';
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, CreateDateColumn } from 'typeorm';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -30,4 +30,7 @@ export class User {
 
   @OneToOne(() => Counter, (counter) => counter.user, { nullable: true })
   counter: Counter;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }
