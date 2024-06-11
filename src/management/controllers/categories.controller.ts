@@ -1,9 +1,13 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { CategoryService } from '../services';
+
 import { PaginationParamsDto } from 'src/common/dtos';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dtos';
+import { CategoryService } from '../services';
+import { Protected } from 'src/auth/decorators';
+import { UserRole } from 'src/users/entities/user.entity';
 
 @Controller('categories')
+@Protected(UserRole.ADMIN)
 export class CategoriesController {
   constructor(private categoriesService: CategoryService) {}
 

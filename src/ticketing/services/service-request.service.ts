@@ -20,8 +20,8 @@ export class ServiceRequestService {
       select: { branches: { id: true } },
     });
     if (!service) throw new BadRequestException('El servicio solicitado no existe');
-    const branch = service.branches.find((el) => el.id === id_branch);
-    if (!branch) throw new BadRequestException('La sucursal no tiene el servicio seleccionado');
+    const branch = service.branches.find((branch) => branch.id === id_branch);
+    if (!branch) throw new BadRequestException('La sucursal proporcionada no es valida');
     const code = await this._generateRequestCode(service, branch);
     const newRequest = this.requestRepository.create({
       priority: priority,
@@ -43,9 +43,9 @@ export class ServiceRequestService {
     endDate.setHours(23, 59, 59, 999);
 
     const correlative = await this.requestRepository.countBy({
-      service: service,
-      branch: branch,
-      date: Between(startDate, endDate),
+      service: { id: service.id },
+      branch: { id: branch.id },
+      createdAt: Between(startDate, endDate),
     });
     return `${service.code.trim()}${correlative + 1}`;
   }

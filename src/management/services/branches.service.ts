@@ -108,6 +108,7 @@ export class BranchesService {
   }
 
   async searchAvailables(term: string) {
+    console.log(term);
     return await this.branchRepository.find({
       where: { name: ILike(`%${term}%`) },
       take: 5,

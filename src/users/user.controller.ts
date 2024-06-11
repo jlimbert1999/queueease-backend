@@ -1,8 +1,12 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { UserService } from './user.service';
+
 import { PaginationParamsDto } from 'src/common/dtos';
 import { CreateUserDto, UpdateUserDto } from './dtos';
+import { UserService } from './user.service';
+import { Protected } from 'src/auth/decorators';
+import { UserRole } from './entities/user.entity';
 
+@Protected(UserRole.ADMIN)
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}

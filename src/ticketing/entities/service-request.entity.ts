@@ -20,7 +20,7 @@ export class ServiceRequest {
   code: string;
 
   @CreateDateColumn()
-  date: Date;
+  createdAt: Date;
 
   @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
   status: string;

@@ -2,8 +2,11 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { BranchesService } from '../services';
 import { PaginationParamsDto } from 'src/common/dtos';
 import { CreateBranchDto } from '../dtos';
+import { Protected } from 'src/auth/decorators';
+import { UserRole } from 'src/users/entities/user.entity';
 
 @Controller('branches')
+@Protected(UserRole.ADMIN)
 export class BranchController {
   constructor(private branchService: BranchesService) {}
 

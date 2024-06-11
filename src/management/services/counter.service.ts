@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ILike, In, QueryFailedError, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsSelect, In, QueryFailedError, Repository } from 'typeorm';
 import { CreateCounterDto, UpdateCounterDto } from '../dtos';
 import { Branch, Service, Counter } from '../entities';
 import { PaginationParamsDto } from 'src/common/dtos';
@@ -19,20 +19,26 @@ export class CounterService {
     const [counters, length] = await this.deskRepository.findAndCount({
       take: limit,
       skip: offset,
-      relations: {
-        user: true,
-        services: true,
-        branch: true,
-      },
-      select: {
-        user: {
-          id: true,
-          fullname: true,
-        },
-      },
+      relations: { user: true },
+      select: { user: { id: true, fullname: true } },
       order: {
         createdAt: 'DESC',
       },
+    });
+    return { counters, length };
+  }
+
+  async search(term: string, { limit, offset }: PaginationParamsDto) {
+    const [counters, length] = await this.deskRepository.findAndCount({
+      where: [
+        { name: ILike(`%${term}%`) },
+        { branch: { name: ILike(`%${term}%`) } },
+        { user: { fullname: ILike(`%${term}%`) } },
+      ],
+      take: limit,
+      skip: offset,
+      relations: { user: true },
+      select: { user: { id: true, fullname: true } },
     });
     return { counters, length };
   }
@@ -51,20 +57,21 @@ export class CounterService {
         services: validServices,
         branch: branchDB,
       });
-      return await this.deskRepository.save(newDesk);
+      const createdCounter = await this.deskRepository.save(newDesk);
+      return await this.deskRepository.findOne({
+        where: { id: createdCounter.id },
+        relations: { user: true },
+        select: { user: { id: true, fullname: true } },
+      });
     } catch (error) {
       this._handleErrors(error);
     }
   }
 
   async update(id: string, { services, user, ...props }: UpdateCounterDto) {
-    const counterDB = await this.deskRepository.findOne({ where: { id } });
+    const counterDB = await this.deskRepository.findOne({ where: { id }, relations: { branch: { services: true } } });
     if (!counterDB) throw new NotFoundException('La ventanilla editada no existe');
-    const branchDB = await this.branchRepository.findOne({
-      where: { id: counterDB.branch.id },
-      relations: { services: true },
-    });
-    const validServices = await this._checkAllowedServices(branchDB, services);
+    const validServices = await this._checkAllowedServices(counterDB.branch, services);
     try {
       await this.deskRepository.save({
         id,
@@ -72,7 +79,11 @@ export class CounterService {
         services: validServices,
         user: user ? await this.userRepository.findOne({ where: { id: user } }) : null,
       });
-      return await this.deskRepository.findOne({ where: { id } });
+      return await this.deskRepository.findOne({
+        where: { id: id },
+        relations: { user: true },
+        select: { user: { id: true, fullname: true } },
+      });
     } catch (error) {
       this._handleErrors(error);
     }
@@ -86,14 +97,9 @@ export class CounterService {
   }
 
   private _handleErrors(error: any) {
-    // console.log(error);
     if (error instanceof QueryFailedError) {
       throw new BadRequestException('El numero de ventanilla es unico por sucursal');
     }
     throw new InternalServerErrorException('Error al crear la ventanilla');
-  }
-
-  private _projectionData(): FindOptionsSelect<Counter> {
-    return { services: { id: true, name: true }, branch: { id: true, name: true } };
   }
 }

@@ -11,16 +11,11 @@ export class CustomerController {
   constructor(
     private branchService: BranchesService,
     private requestService: ServiceRequestService,
-    private groupwareGatewat: GroupwareGateway,
+    private groupwareGateway: GroupwareGateway,
   ) {}
 
   @Get('menu/:id_branch')
   getMenu(@Param('id_branch') id_branch: string) {
-    // say.speak('FICHA, ACH22, PASE A LA VENTANILLA, 4?', null, 0.8, (err) => {
-    //   if (err) {
-    //     return console.error(err);
-    //   }
-    // });
     return this.branchService.getMenu(id_branch);
   }
 
@@ -29,10 +24,15 @@ export class CustomerController {
     return this.branchService.getBranchAdvertisement(id_branch);
   }
 
+  @Get('branches/:term')
+  getBranches(@Param('term') term: string) {
+    return this.branchService.searchAvailables(term);
+  }
+
   @Post('request')
   async createRequest(@Body() data: CreateRequestServiceDto) {
     const { serviceRequest, name } = await this.requestService.create(data);
-    this.groupwareGatewat.sendServiceRequests(serviceRequest);
-    return { code: serviceRequest.code, date: serviceRequest.date, name: name };
+    this.groupwareGateway.sendServiceRequests(serviceRequest);
+    return { code: serviceRequest.code, date: serviceRequest.createdAt, name: name };
   }
 }

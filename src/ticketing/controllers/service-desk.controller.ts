@@ -23,6 +23,7 @@ export class ServiceDeskController {
   @Get('next')
   async getNextRequest(@UserRequest() user: User) {
     const request = await this.counterService.handleRequest(user);
+    // this.branchGateway.notifyRequest(request);
     this.branchGateway.notifyRequest(request);
   }
 }

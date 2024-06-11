@@ -1,15 +1,25 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { CounterService } from '../services';
-import { PaginationParamsDto } from 'src/common/dtos';
+
 import { CreateCounterDto, UpdateCounterDto } from '../dtos';
+import { PaginationParamsDto } from 'src/common/dtos';
+
+import { CounterService } from '../services';
+import { Protected } from 'src/auth/decorators';
+import { UserRole } from 'src/users/entities/user.entity';
 
 @Controller('counter')
+@Protected(UserRole.ADMIN)
 export class CounterController {
   constructor(private serviceDeskService: CounterService) {}
 
   @Get()
   findAll(@Query() params: PaginationParamsDto) {
     return this.serviceDeskService.findAll(params);
+  }
+
+  @Get('search/:term')
+  search(@Param('term') term: string, @Query() params: PaginationParamsDto) {
+    return this.serviceDeskService.search(term, params);
   }
 
   @Post()
