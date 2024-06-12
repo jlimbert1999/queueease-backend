@@ -13,17 +13,16 @@ export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const [error, brach] = this.branchConnectionService.checkBranchIsValid(data);
     if (error) return client.disconnect();
     this.branchConnectionService.onBranchConnected(client.id, brach);
-    console.log(this.branchConnectionService.getBranches());
   }
 
   handleDisconnect(client: Socket) {
     this.branchConnectionService.onBranchDisconnected(client.id);
   }
 
-  notifyRequest(request: ServiceRequest) {
+  announceRequest(request: ServiceRequest) {
     const branch = this.branchConnectionService.getBranch(request.branch.id);
-    console.log('active branch', branch);
     if (!branch) return;
-    this.server.to(branch.socketIds).emit('attention', request);
+    console.log(branch);
+    this.server.to(branch.socketIds).emit('announce', request);
   }
 }

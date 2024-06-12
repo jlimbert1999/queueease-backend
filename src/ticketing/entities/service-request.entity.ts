@@ -1,4 +1,4 @@
-import { Branch, Service, Counter } from 'src/management/entities';
+import { Branch, Service, Counter } from 'src/administration/entities';
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
 
 export enum RequestStatus {
@@ -32,5 +32,6 @@ export class ServiceRequest {
   branch: Branch;
 
   @ManyToOne(() => Counter, { nullable: true })
-  counter: Counter;
+  counter?: Counter;
+
 }

@@ -1,4 +1,4 @@
-import { Counter } from 'src/management/entities';
+import { Counter } from 'src/administration/entities';
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne, CreateDateColumn } from 'typeorm';
 
 export enum UserRole {

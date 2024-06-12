@@ -1,18 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
-import { ServiceRequest } from '../entities';
+
+import { Branch, Service } from 'src/administration/entities';
 import { CreateRequestServiceDto } from '../dtos';
-import { Branch, Service } from 'src/management/entities';
+import { ServiceRequest } from '../entities';
 
 @Injectable()
-export class ServiceRequestService {
+export class CustomerService {
   constructor(
     @InjectRepository(ServiceRequest) private requestRepository: Repository<ServiceRequest>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
   ) {}
 
-  async create(requestDto: CreateRequestServiceDto) {
+  async createRequest(requestDto: CreateRequestServiceDto) {
     const { id_branch, id_service, priority } = requestDto;
     const service = await this.serviceRepository.findOne({
       where: { id: id_service },
@@ -35,13 +36,10 @@ export class ServiceRequestService {
 
   private async _generateRequestCode(service: Service, branch: Branch) {
     const currentDate = new Date();
-
     const startDate = new Date(currentDate);
     startDate.setHours(0, 0, 0, 0);
-
     const endDate = new Date(currentDate);
     endDate.setHours(23, 59, 59, 999);
-
     const correlative = await this.requestRepository.countBy({
       service: { id: service.id },
       branch: { id: branch.id },
