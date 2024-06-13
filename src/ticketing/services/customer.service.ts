@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 
-import { Branch, Service } from 'src/administration/entities';
+import { Service } from 'src/administration/entities';
 import { CreateRequestServiceDto } from '../dtos';
 import { ServiceRequest } from '../entities';
 
@@ -23,28 +23,27 @@ export class CustomerService {
     if (!service) throw new BadRequestException('El servicio solicitado no existe');
     const branch = service.branches.find((branch) => branch.id === id_branch);
     if (!branch) throw new BadRequestException('La sucursal proporcionada no es valida');
-    const code = await this._generateRequestCode(service, branch);
+    const code = await this._generateRequestCode(service.id, branch.id, service.code);
     const newRequest = this.requestRepository.create({
       priority: priority,
       service: service,
       branch: branch,
       code: code,
     });
-    const createdRequest = await this.requestRepository.save(newRequest);
-    return { name: service.name, serviceRequest: createdRequest };
+    return await this.requestRepository.save(newRequest);
   }
 
-  private async _generateRequestCode(service: Service, branch: Branch) {
+  private async _generateRequestCode(serviceId: string, branchId: string, code: string) {
     const currentDate = new Date();
     const startDate = new Date(currentDate);
     startDate.setHours(0, 0, 0, 0);
     const endDate = new Date(currentDate);
     endDate.setHours(23, 59, 59, 999);
     const correlative = await this.requestRepository.countBy({
-      service: { id: service.id },
-      branch: { id: branch.id },
+      service: { id: serviceId },
+      branch: { id: branchId },
       createdAt: Between(startDate, endDate),
     });
-    return `${service.code.trim()}${correlative + 1}`;
+    return `${code.trim()}${correlative + 1}`;
   }
 }

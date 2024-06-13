@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 import { UserSocket } from './interfaces/user-socket.interface';
-import { ServiceRequest } from 'src/ticketing/entities';
 
 @Injectable()
 export class GroupwareService {
@@ -21,7 +20,7 @@ export class GroupwareService {
   }
 
   onClientDisconnected(id_socket: string) {
-    const client = Object.values(this.clients).find(({ socketIds }) => socketIds.includes(id_socket));
+    const client = this.getClientBySocketId(id_socket);
     if (!client) return;
     this.clients[client.id_user].socketIds = client.socketIds.filter((id) => id !== id_socket);
     if (this.clients[client.id_user].socketIds.length === 0) delete this.clients[client.id_user];
@@ -31,9 +30,13 @@ export class GroupwareService {
     return Object.values(this.clients);
   }
 
-  getClientsForServiceRequest({ branch, service }: ServiceRequest) {
+  getClientBySocketId(id_socket: string): UserSocket | undefined {
+    return Object.values(this.clients).find(({ socketIds }) => socketIds.includes(id_socket));
+  }
+
+  getClientsForServiceRequest(branchId: string, serviceId: string) {
     return Object.values(this.clients)
       .filter((el) => el.counter)
-      .filter(({ counter }) => counter.id_branch === branch.id && counter.services.includes(service.id));
+      .filter(({ counter }) => counter.id_branch === branchId && counter.services.includes(serviceId));
   }
 }

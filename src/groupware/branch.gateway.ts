@@ -3,6 +3,12 @@ import { Socket, Server } from 'socket.io';
 import { BranchConnectionService } from './services';
 import { ServiceRequest } from 'src/ticketing/entities';
 
+// interface advertisement {
+//   id: string;
+//   code: string;
+//   counterNumber: number;
+// }
+
 @WebSocketGateway({ namespace: 'branches' })
 export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
@@ -20,9 +26,12 @@ export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   announceRequest(request: ServiceRequest) {
-    const branch = this.branchConnectionService.getBranch(request.branch.id);
-    if (!branch) return;
-    console.log(branch);
-    this.server.to(branch.socketIds).emit('announce', request);
+    console.log(request);
+    const branch = this.branchConnectionService.getBranch(request.branchId);
+    // if (!branch) return;
+    // // console.log('sending data ', branch);
+    this.server
+      .to(branch.socketIds)
+      .emit('announce', { id: request.id, code: request.code, counterNumber: 2 });
   }
 }

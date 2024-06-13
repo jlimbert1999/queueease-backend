@@ -2,11 +2,10 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { BranchesService } from 'src/administration/services';
-import { BranchGateway } from 'src/groupware/branch.gateway';
 import { Public } from 'src/auth/decorators';
 
-import { CustomerService } from '../services';
 import { CreateRequestServiceDto } from '../dtos';
+import { CustomerService } from '../services';
 
 @Public()
 @Controller('customers')
@@ -15,7 +14,6 @@ export class CustomerController {
     private branchService: BranchesService,
     private customerService: CustomerService,
     private groupwareGateway: GroupwareGateway,
-    private branchGateway: BranchGateway,
   ) {}
 
   @Get('menu/:id_branch')
@@ -35,9 +33,8 @@ export class CustomerController {
 
   @Post('request')
   async createRequest(@Body() data: CreateRequestServiceDto) {
-    const { serviceRequest, name } = await this.customerService.createRequest(data);
-    this.groupwareGateway.notifyNewRequest(serviceRequest);
-    this.branchGateway.announceRequest(serviceRequest);
-    return { code: serviceRequest.code, date: serviceRequest.createdAt, name: name };
+    const request = await this.customerService.createRequest(data);
+    this.groupwareGateway.notifyNewRequest(request);
+    return { code: request.code };
   }
 }

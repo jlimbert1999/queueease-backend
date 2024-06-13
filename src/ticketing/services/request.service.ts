@@ -15,8 +15,6 @@ export class RequestService {
         branch: { id: counter.branch.id },
         service: In(counter.services.map((el) => el.id)),
       },
-      relations: { service: true },
-      select: { service: { name: true } },
       order: {
         priority: 'DESC',
         createdAt: 'ASC',
@@ -30,18 +28,17 @@ export class RequestService {
         counter: { id: counter.id },
         status: RequestStatus.SERVICING,
       },
-      relations: { service: true },
-      select: { service: { name: true } },
     });
   }
 
-  async getNextRequest({ counter }: User) {
-    await this._checkPendings(counter.id);
+  async getNextRequest(user: User) {
+    const currentRequest = await this.getCurrentRequest(user);
+    if (currentRequest) throw new BadRequestException(`La solicitud ${currentRequest.code} aun esta en atencion`);
     const request = await this.requestRepository.findOne({
       where: {
         status: RequestStatus.PENDING,
-        branch: { id: counter.branch.id },
-        service: In(counter.services.map(({ id }) => id)),
+        branch: { id: user.counter.branch.id },
+        service: In(user.counter.services.map(({ id }) => id)),
         counter: IsNull(),
       },
       order: {
@@ -50,18 +47,11 @@ export class RequestService {
       },
     });
     if (!request) throw new BadRequestException('No hay solicitudes en cola');
-    await this.requestRepository.update(request.id, { counter: counter, status: RequestStatus.SERVICING });
-    return await this.requestRepository.findOne({
-      where: { id: request.id },
-      relations: { service: true },
-      select: { service: { name: true } },
+    const result = await this.requestRepository.preload({
+      id: request.id,
+      counter: user.counter,
+      status: RequestStatus.SERVICING,
     });
-  }
-
-  private async _checkPendings(id_counter: string) {
-    const pendingRequest = await this.requestRepository.findOne({
-      where: { counter: { id: id_counter }, status: RequestStatus.SERVICING },
-    });
-    if (pendingRequest) throw new BadRequestException(`La solitud ${pendingRequest.code} aun esta siendo atendida`);
+    return await this.requestRepository.save(result);
   }
 }

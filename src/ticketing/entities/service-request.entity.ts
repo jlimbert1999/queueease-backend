@@ -31,7 +31,12 @@ export class ServiceRequest {
   @ManyToOne(() => Branch, (branch) => branch.serviceRequests)
   branch: Branch;
 
-  @ManyToOne(() => Counter, { nullable: true })
+  @ManyToOne(() => Counter, { nullable: true, eager: true })
   counter?: Counter;
 
+  @Column({ nullable: true })
+  branchId: string;
+
+  @Column({ nullable: true })
+  serviceId: string;
 }
