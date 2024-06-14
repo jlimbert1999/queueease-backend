@@ -29,7 +29,12 @@ export class AuthService {
   async checkAuthStatus(id_user: string) {
     const userDB = await this.userRepository.findOne({ where: { id: id_user }, relations: { counter: true } });
     if (!userDB) throw new UnauthorizedException();
-    return { token: this._generateToken(userDB) };
+    return {
+      token: this._generateToken(userDB),
+      ...(userDB.counter && {
+        counterNumber: userDB.counter.number,
+      }),
+    };
   }
 
   private _generateToken(user: User): string {

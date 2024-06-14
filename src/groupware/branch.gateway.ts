@@ -1,13 +1,12 @@
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { BranchConnectionService } from './services';
-import { ServiceRequest } from 'src/ticketing/entities';
 
-// interface advertisement {
-//   id: string;
-//   code: string;
-//   counterNumber: number;
-// }
+interface advertisement {
+  id: string;
+  code: string;
+  counterNumber: number;
+}
 
 @WebSocketGateway({ namespace: 'branches' })
 export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -25,13 +24,8 @@ export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.branchConnectionService.onBranchDisconnected(client.id);
   }
 
-  announceRequest(request: ServiceRequest) {
-    console.log(request);
-    const branch = this.branchConnectionService.getBranch(request.branchId);
-    // if (!branch) return;
-    // // console.log('sending data ', branch);
-    this.server
-      .to(branch.socketIds)
-      .emit('announce', { id: request.id, code: request.code, counterNumber: 2 });
+  announceRequest(id_branch: string, advertisement: advertisement) {
+    const { socketIds } = this.branchConnectionService.getBranch(id_branch) ?? { socketIds: [] };
+    this.server.to(socketIds).emit('announce', advertisement);
   }
 }

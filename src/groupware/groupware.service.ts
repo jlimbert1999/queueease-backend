@@ -34,7 +34,7 @@ export class GroupwareService {
     return Object.values(this.clients).find(({ socketIds }) => socketIds.includes(id_socket));
   }
 
-  getClientsForServiceRequest(branchId: string, serviceId: string) {
+  getClientsForServicing(branchId: string, serviceId: string) {
     return Object.values(this.clients)
       .filter((el) => el.counter)
       .filter(({ counter }) => counter.id_branch === branchId && counter.services.includes(serviceId));

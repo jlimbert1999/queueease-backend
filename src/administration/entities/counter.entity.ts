@@ -10,6 +10,8 @@ import {
   JoinColumn,
   Unique,
   CreateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Branch } from './branch.entity';
 import { Service } from './service.entity';
@@ -22,8 +24,8 @@ export class Counter {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  name: string;
+  @Column({ nullable: true })
+  ip: string;
 
   @Column()
   number: number;
@@ -44,4 +46,14 @@ export class Counter {
 
   // @OneToMany(() => ServiceRequest, (request) => request.desk)
   // requests: ServiceRequest[];
+
+  @BeforeInsert()
+  checkIpInsert() {
+    this.ip = this.ip.trim();
+  }
+
+  @BeforeUpdate()
+  checkSlugUpdate() {
+    this.ip = this.ip.trim();
+  }
 }

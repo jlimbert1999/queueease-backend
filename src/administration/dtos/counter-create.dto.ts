@@ -1,23 +1,19 @@
 import { Type } from 'class-transformer';
-import { IsString, IsNotEmpty, IsPositive, IsInt, Min, IsArray, IsUUID, IsOptional } from 'class-validator';
+import { IsString, IsPositive, IsInt, Min, IsArray, IsUUID, IsNotEmpty } from 'class-validator';
 
 export class CreateCounterDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
   @Type(() => Number)
   @IsInt()
   @IsPositive()
   @Min(1)
   number: number;
 
-  @IsUUID()
-  branch: string;
+  @IsString()
+  @IsNotEmpty()
+  ip: string;
 
   @IsUUID()
-  @IsOptional()
-  user?: string;
+  branch: string;
 
   @IsArray()
   @IsString({ each: true })

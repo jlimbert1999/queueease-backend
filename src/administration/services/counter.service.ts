@@ -31,7 +31,7 @@ export class CounterService {
   async search(term: string, { limit, offset }: PaginationParamsDto) {
     const [counters, length] = await this.deskRepository.findAndCount({
       where: [
-        { name: ILike(`%${term}%`) },
+        { ip: ILike(`%${term}%`) },
         { branch: { name: ILike(`%${term}%`) } },
         { user: { fullname: ILike(`%${term}%`) } },
       ],
@@ -44,17 +44,13 @@ export class CounterService {
   }
 
   async create(serviceDeskDto: CreateCounterDto) {
-    const { services, user, branch, ...props } = serviceDeskDto;
-    const branchDB = await this.branchRepository.findOne({
-      where: { id: branch },
-      relations: { services: true },
-    });
-    const validServices = await this._checkAllowedServices(branchDB, services);
+    const { services, branch, ...props } = serviceDeskDto;
+    await this._checkDuplicateIp(props.ip);
+    const { branchDB, servicesDB } = await this._checkBranchServices(branch, services);
     try {
       const newDesk = this.deskRepository.create({
         ...props,
-        user: user ? await this.userRepository.findOne({ where: { id: user } }) : null,
-        services: validServices,
+        services: servicesDB,
         branch: branchDB,
       });
       const createdCounter = await this.deskRepository.save(newDesk);
@@ -68,7 +64,7 @@ export class CounterService {
     }
   }
 
-  async update(id: string, { services, user, ...props }: UpdateCounterDto) {
+  async update(id: string, { services, ...props }: UpdateCounterDto) {
     const counterDB = await this.deskRepository.findOne({ where: { id }, relations: { branch: { services: true } } });
     if (!counterDB) throw new NotFoundException('La ventanilla editada no existe');
     const validServices = await this._checkAllowedServices(counterDB.branch, services);
@@ -77,7 +73,6 @@ export class CounterService {
         id,
         ...props,
         services: validServices,
-        user: user ? await this.userRepository.findOne({ where: { id: user } }) : null,
       });
       return await this.deskRepository.findOne({
         where: { id: id },
@@ -89,11 +84,23 @@ export class CounterService {
     }
   }
 
-  private async _checkAllowedServices(brach: Branch, assignedServices: string[]) {
-    const allowedServices = brach.services.map((el) => el.id);
-    const isInvalid = assignedServices.some((el) => !allowedServices.includes(el));
-    if (isInvalid) throw new BadRequestException('No se puede asignar un servicio de otra sucursal');
-    return await this.serviceRepository.find({ where: { id: In(assignedServices) } });
+  private async _checkDuplicateIp(ip: string) {
+    const duplicate = await this.deskRepository.findOneBy({ ip: ip.trim() });
+    if (duplicate) throw new BadRequestException(`La ip ${ip} ya esta asignada`);
+  }
+
+  private async _checkBranchServices(
+    id_branch: string,
+    services: string[],
+  ): Promise<{ branchDB: Branch; servicesDB: Service[] }> {
+    const branch = await this.branchRepository.findOne({ where: { id: id_branch }, relations: { services: true } });
+    if (!branch) throw new BadRequestException(`La sucursal ${id_branch} no existe.`);
+    const validServices = await this.serviceRepository.findBy({ id: In(services) });
+    validServices.forEach(({ id }) => {
+      const isValid = branch.services.find((item) => item.id === id);
+      if (!isValid) throw new BadRequestException(`Solo puede asignar servicio de la sucursal ${branch.name}`);
+    });
+    return { branchDB: branch, servicesDB: validServices };
   }
 
   private _handleErrors(error: any) {

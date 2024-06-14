@@ -5,7 +5,6 @@ import {
   WebSocketServer,
   SubscribeMessage,
   MessageBody,
-  ConnectedSocket,
 } from '@nestjs/websockets';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
@@ -14,7 +13,6 @@ import { GroupwareService } from './groupware.service';
 import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 import { ServiceRequest } from 'src/ticketing/entities';
 import { BranchGateway } from './branch.gateway';
-
 
 @WebSocketGateway({
   namespace: 'users',
@@ -48,22 +46,22 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   notifyNewRequest(request: ServiceRequest) {
-    const users = this.groupwareService.getClientsForServiceRequest(request.branchId, request.serviceId);
-    users.forEach((user) => {
-      this.server.to(user.socketIds).emit('new-request', request);
-    });
+    const clients = this.groupwareService.getClientsForServicing(request.branchId, request.serviceId);
+    for (const client of clients) {
+      this.server.to(client.socketIds).emit('new-request', request);
+    }
+  }
+
+  notifyRequestHandled(branchId: string, serviceId: string, requestId: string) {
+    const clients = this.groupwareService.getClientsForServicing(branchId, serviceId);
+    for (const client of clients) {
+      this.server.to(client.socketIds).emit('handle-request', requestId);
+    }
   }
 
   @SubscribeMessage('test')
   handleEvent(@MessageBody() data: ServiceRequest) {
-    this.branchGateway.announceRequest(data);
-  }
-
-  sendNextRequest(request: ServiceRequest) {
-    // const clients = this.groupwareService.getClientsForServiceRequest(request);
-    // clients.forEach((user) => {
-    //   this.server.to(user.socketIds).emit('next-request', request);
-    // });
-    // this.server.emit('attention', request);
+    console.log(data);
+    // this.branchGateway.announceRequest();
   }
 }
