@@ -1,42 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
-import { UserSocket } from './interfaces/user-socket.interface';
+import { counterPayload } from './interfaces';
+
+interface CounterSocket {
+  id: string;
+  branchId: string;
+  services: string[];
+  socketIds: string[];
+}
 
 @Injectable()
 export class GroupwareService {
-  private clients: Record<string, UserSocket> = {};
+  private counters: Record<string, CounterSocket> = {};
 
-  constructor() {}
-
-  onClientConnected(id_socket: string, payload: JwtPayload): void {
-    if (this.clients[payload.id_user]) {
-      this.clients[payload.id_user].socketIds.push(id_socket);
-      return;
-    }
-    this.clients[payload.id_user] = {
-      ...payload,
-      socketIds: [id_socket],
+  onCounterConnected(id_socket: string, counter: counterPayload): void {
+    const { socketIds } = this.counters[counter.id] ?? { socketIds: [] };
+    this.counters[counter.id] = {
+      ...counter,
+      socketIds: [...socketIds, id_socket],
     };
+    console.log(this.getCounters());
   }
 
-  onClientDisconnected(id_socket: string) {
-    const client = this.getClientBySocketId(id_socket);
-    if (!client) return;
-    this.clients[client.id_user].socketIds = client.socketIds.filter((id) => id !== id_socket);
-    if (this.clients[client.id_user].socketIds.length === 0) delete this.clients[client.id_user];
+  onCounterDisconnected(id_socket: string) {
+    const counter = this.getCounterBySocketId(id_socket);
+    if (!counter) return;
+    this.counters[counter.id].socketIds = counter.socketIds.filter((id) => id !== id_socket);
+    if (this.counters[counter.id].socketIds.length === 0) {
+      delete this.counters[counter.id];
+    }
+    console.log(this.getCounters());
   }
 
-  getClients() {
-    return Object.values(this.clients);
+  getCounters() {
+    return Object.values(this.counters);
   }
 
-  getClientBySocketId(id_socket: string): UserSocket | undefined {
-    return Object.values(this.clients).find(({ socketIds }) => socketIds.includes(id_socket));
+  getCounterBySocketId(id_socket: string): CounterSocket | undefined {
+    return Object.values(this.counters).find(({ socketIds }) => socketIds.includes(id_socket));
   }
 
-  getClientsForServicing(branchId: string, serviceId: string) {
-    return Object.values(this.clients)
-      .filter((el) => el.counter)
-      .filter(({ counter }) => counter.id_branch === branchId && counter.services.includes(serviceId));
+  getCountersByGroup(branchId: string, serviceId: string) {
+    return Object.values(this.counters).filter(
+      (counter) => counter.branchId === branchId && counter.services.includes(serviceId),
+    );
   }
 }

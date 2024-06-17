@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Repository } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
 import { RequestStatus, ServiceRequest } from '../entities';
 import { UpdateRequestServiceDto } from '../dtos';
+import { Counter } from 'src/administration/entities';
 
 @Injectable()
 export class RequestService {
   constructor(@InjectRepository(ServiceRequest) private requestRepository: Repository<ServiceRequest>) {}
 
-  async getPendingsByCounter({ counter }: User) {
+  async getPendingsByCounter(counter: Counter) {
     return await this.requestRepository.find({
       where: {
         status: RequestStatus.PENDING,
@@ -23,23 +23,23 @@ export class RequestService {
     });
   }
 
-  async getCurrentRequestByCounter({ counter }: User) {
+  async getCurrentRequestByCounter({ id }: Counter) {
     return await this.requestRepository.findOne({
       where: {
-        counter: { id: counter.id },
+        counter: { id: id },
         status: RequestStatus.SERVICING,
       },
     });
   }
 
-  async getNextRequest(user: User) {
-    const currentRequest = await this.getCurrentRequestByCounter(user);
+  async getNextRequest(counter: Counter) {
+    const currentRequest = await this.getCurrentRequestByCounter(counter);
     if (currentRequest) throw new BadRequestException(`La solicitud ${currentRequest.code} aun esta en atencion`);
     const request = await this.requestRepository.findOne({
       where: {
         status: RequestStatus.PENDING,
-        branch: { id: user.counter.branch.id },
-        service: In(user.counter.services.map(({ id }) => id)),
+        branch: { id: counter.branchId },
+        service: In(counter.services.map(({ id }) => id)),
         counter: IsNull(),
       },
       order: {
@@ -50,7 +50,7 @@ export class RequestService {
     if (!request) throw new BadRequestException('No hay solicitudes en cola');
     const result = await this.requestRepository.preload({
       id: request.id,
-      counter: user.counter,
+      counter: counter,
       status: RequestStatus.SERVICING,
     });
     return await this.requestRepository.save(result);

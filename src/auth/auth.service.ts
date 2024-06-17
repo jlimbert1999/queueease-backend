@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthDto } from './dto/auth.dto';
 import { User, UserRole } from 'src/users/entities/user.entity';
 import { JwtPayload } from './interfaces/jwt.interface';
+import { menuFrontend } from './interfaces/menu-frontend.interface';
 
 @Injectable()
 export class AuthService {
@@ -27,27 +28,15 @@ export class AuthService {
   }
 
   async checkAuthStatus(id_user: string) {
-    const userDB = await this.userRepository.findOne({ where: { id: id_user }, relations: { counter: true } });
+    const userDB = await this.userRepository.findOne({ where: { id: id_user } });
     if (!userDB) throw new UnauthorizedException();
-    return {
-      token: this._generateToken(userDB),
-      ...(userDB.counter && {
-        counterNumber: userDB.counter.number,
-      }),
-    };
+    return { token: this._generateToken(userDB), menu: this._generateMenu(userDB.roles) };
   }
 
   private _generateToken(user: User): string {
-    const { counter } = user;
     const payload: JwtPayload = {
       id_user: user.id,
       fullname: user.fullname,
-      ...(counter && {
-        counter: {
-          id_branch: counter.branch.id,
-          services: counter.services.map((el) => el.id),
-        },
-      }),
     };
     return this.jwtService.sign(payload);
   }
@@ -56,5 +45,38 @@ export class AuthService {
     if (user.roles.includes(UserRole.ADMIN)) return 'administration';
     if (user.roles.includes(UserRole.OFFICER)) return 'queue';
     return '';
+  }
+
+  private _generateMenu(roles: string[]): menuFrontend[] {
+    const menu: menuFrontend[] = [];
+    if (roles.includes(UserRole.ADMIN)) {
+      menu.push({
+        label: 'Administracion',
+        icon: 'pi pi-list',
+        items: [
+          {
+            label: 'Categorias',
+            routerLink: 'administration/categories',
+          },
+          {
+            label: 'Servicios',
+            routerLink: 'administration/services',
+          },
+          {
+            label: 'Sucursales',
+            routerLink: 'administration/branches',
+          },
+          {
+            label: 'Ventanillas',
+            routerLink: 'administration/counters',
+          },
+          {
+            label: 'Usuarios',
+            routerLink: 'administration/users',
+          },
+        ],
+      });
+    }
+    return menu;
   }
 }

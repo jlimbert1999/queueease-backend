@@ -6,6 +6,8 @@ import { onlyAssignedCounter } from '../decorators/only-assigned-counter.decorat
 import { RequestService } from '../services';
 import { BranchGateway } from 'src/groupware/branch.gateway';
 import { UpdateRequestServiceDto } from '../dtos';
+import { CounterRequest } from '../decorators/counter-request.decorator';
+import { Counter } from 'src/administration/entities';
 
 @onlyAssignedCounter()
 @Controller('service-desk')
@@ -17,18 +19,18 @@ export class RequestController {
   ) {}
 
   @Get()
-  getPendingsByCounter(@UserRequest() user: User) {
-    return this.requestService.getPendingsByCounter(user);
+  getPendingsByCounter(@CounterRequest() counter: Counter) {
+    return this.requestService.getPendingsByCounter(counter);
   }
 
   @Get('current')
-  getCurrentRequestByCounter(@UserRequest() user: User) {
-    return this.requestService.getCurrentRequestByCounter(user);
+  getCurrentRequestByCounter(@CounterRequest() counter: Counter) {
+    return this.requestService.getCurrentRequestByCounter(counter);
   }
 
   @Get('next')
-  async getNextRequest(@UserRequest() user: User) {
-    const request = await this.requestService.getNextRequest(user);
+  async getNextRequest(@CounterRequest() counter: Counter) {
+    const request = await this.requestService.getNextRequest(counter);
     this.groupwareGateway.notifyRequestHandled(request.branchId, request.serviceId, request.id);
     return request;
   }
@@ -36,5 +38,10 @@ export class RequestController {
   @Patch(':id')
   async updateRequest(@Param('id') id: string, @Body() data: UpdateRequestServiceDto) {
     return this.requestService.updateRequest(id, data);
+  }
+
+  @Get('detail')
+  getCounterDetail(@CounterRequest() counter: Counter) {
+    return counter;
   }
 }

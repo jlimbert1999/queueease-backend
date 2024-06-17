@@ -10,7 +10,6 @@ import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 
 import { GroupwareService } from './groupware.service';
-import { JwtPayload } from 'src/auth/interfaces/jwt.interface';
 import { ServiceRequest } from 'src/ticketing/entities';
 import { BranchGateway } from './branch.gateway';
 
@@ -29,31 +28,29 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     private branchGateway: BranchGateway,
   ) {}
 
-  handleConnection(client: Socket) {
-    const token = client.handshake.auth.token;
-    if (!token) return;
+  handleConnection(socket: Socket) {
     try {
-      const decoded: JwtPayload = this.jwtService.verify(token);
-      this.groupwareService.onClientConnected(client.id, decoded);
+      const { token, counter } = socket.handshake.auth;
+      this.jwtService.verify(token);
+      this.groupwareService.onCounterConnected(socket.id, counter);
     } catch (error) {
-      client.disconnect();
+      socket.disconnect();
     }
   }
 
-  handleDisconnect(client: Socket) {
-    this.groupwareService.onClientDisconnected(client.id);
-    client.broadcast.emit('listar', this.groupwareService.getClients());
+  handleDisconnect(socket: Socket) {
+    this.groupwareService.onCounterDisconnected(socket.id);
   }
 
   notifyNewRequest(request: ServiceRequest) {
-    const clients = this.groupwareService.getClientsForServicing(request.branchId, request.serviceId);
+    const clients = this.groupwareService.getCountersByGroup(request.branchId, request.serviceId);
     for (const client of clients) {
       this.server.to(client.socketIds).emit('new-request', request);
     }
   }
 
   notifyRequestHandled(branchId: string, serviceId: string, requestId: string) {
-    const clients = this.groupwareService.getClientsForServicing(branchId, serviceId);
+    const clients = this.groupwareService.getCountersByGroup(branchId, serviceId);
     for (const client of clients) {
       this.server.to(client.socketIds).emit('handle-request', requestId);
     }

@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtPayload } from './interfaces/jwt.interface';
+import { JwtPayload } from '../interfaces/jwt.interface';
 import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
@@ -19,14 +19,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       secretOrKey: configService.getOrThrow('jwt_key'),
     });
   }
-  async validate(payload: JwtPayload): Promise<User> {
+  async validate(payload: JwtPayload) {
     const { id_user } = payload;
-    const userDB = await this.userRepository.findOne({
-      where: { id: id_user },
-      relations: { counter: true },
-    });
+    const userDB = await this.userRepository.findOne({ where: { id: id_user } });
     if (!userDB) throw new UnauthorizedException('Token invalido, vuelva a iniciar sesion');
-    delete userDB.password
+    delete userDB.password;
     return userDB;
   }
 }

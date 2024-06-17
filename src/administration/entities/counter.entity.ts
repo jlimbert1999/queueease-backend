@@ -1,17 +1,17 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  ManyToMany,
-  JoinTable,
-  Index,
-  OneToOne,
-  JoinColumn,
-  Unique,
-  CreateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 import { Branch } from './branch.entity';
 import { Service } from './service.entity';
@@ -30,22 +30,22 @@ export class Counter {
   @Column()
   number: number;
 
-  @ManyToOne(() => Branch, (branch) => branch.counters, { eager: true })
+  @ManyToOne(() => Branch, (branch) => branch.counters)
   branch: Branch;
 
   @OneToOne(() => User, (user) => user.counter, { nullable: true })
   @JoinColumn()
   user?: User;
 
-  @ManyToMany(() => Service, { eager: true })
+  @ManyToMany(() => Service)
   @JoinTable()
   services: Service[];
 
   @CreateDateColumn()
   createdAt: Date;
 
-  // @OneToMany(() => ServiceRequest, (request) => request.desk)
-  // requests: ServiceRequest[];
+  @Column({ nullable: true })
+  branchId: string;
 
   @BeforeInsert()
   checkIpInsert() {

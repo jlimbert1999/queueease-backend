@@ -5,15 +5,24 @@ import {
   ForbiddenException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { User } from 'src/users/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Counter } from 'src/administration/entities';
 
 @Injectable()
 export class CounterGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
+  constructor(@InjectRepository(Counter) private counterRepository: Repository<Counter>) {}
+
+  async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
-    const user: User = request['user'];
-    if (!user.counter) throw new ForbiddenException('Sin asginacion a ventanilla');
-    if (!user.counter.branch) throw new InternalServerErrorException('Branch for counter is undefined');
+    if (!request['user']) throw new InternalServerErrorException('User is not authenticated');
+    const counter = await this.counterRepository.findOne({
+      where: { ip: request['ip'] },
+      relations: { branch: true, services: true },
+      select: { branch: { id: true }, services: { id: true, name: true } },
+    });
+    if (!counter) throw new ForbiddenException(`El equipo ${request['ip']} no esta registrado`);
+    request['counter'] = counter;
     return true;
   }
 }

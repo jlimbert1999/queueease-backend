@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { ILike, In, QueryFailedError, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ILike, In, QueryFailedError, Repository } from 'typeorm';
+
+import { PaginationParamsDto } from 'src/common/dtos';
 import { CreateCounterDto, UpdateCounterDto } from '../dtos';
 import { Branch, Service, Counter } from '../entities';
-import { PaginationParamsDto } from 'src/common/dtos';
-import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class CounterService {
@@ -12,15 +12,14 @@ export class CounterService {
     @InjectRepository(Counter) private deskRepository: Repository<Counter>,
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
-    @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
   async findAll({ limit, offset }: PaginationParamsDto) {
     const [counters, length] = await this.deskRepository.findAndCount({
       take: limit,
       skip: offset,
-      relations: { user: true },
-      select: { user: { id: true, fullname: true } },
+      relations: ['services', 'branch'],
+      select: { services: { id: true, name: true }, branch: { id: true, name: true } },
       order: {
         createdAt: 'DESC',
       },
@@ -30,15 +29,11 @@ export class CounterService {
 
   async search(term: string, { limit, offset }: PaginationParamsDto) {
     const [counters, length] = await this.deskRepository.findAndCount({
-      where: [
-        { ip: ILike(`%${term}%`) },
-        { branch: { name: ILike(`%${term}%`) } },
-        { user: { fullname: ILike(`%${term}%`) } },
-      ],
+      where: [{ ip: ILike(`%${term}%`) }, { branch: { name: ILike(`%${term}%`) } }],
+      relations: ['services', 'branch'],
+      select: { services: { id: true, name: true }, branch: { id: true, name: true } },
       take: limit,
       skip: offset,
-      relations: { user: true },
-      select: { user: { id: true, fullname: true } },
     });
     return { counters, length };
   }
@@ -53,31 +48,27 @@ export class CounterService {
         services: servicesDB,
         branch: branchDB,
       });
-      const createdCounter = await this.deskRepository.save(newDesk);
-      return await this.deskRepository.findOne({
-        where: { id: createdCounter.id },
-        relations: { user: true },
-        select: { user: { id: true, fullname: true } },
-      });
+      return await this.deskRepository.save(newDesk);
     } catch (error) {
       this._handleErrors(error);
     }
   }
 
   async update(id: string, { services, ...props }: UpdateCounterDto) {
-    const counterDB = await this.deskRepository.findOne({ where: { id }, relations: { branch: { services: true } } });
+    const counterDB = await this.deskRepository.findOneBy({ id: id });
     if (!counterDB) throw new NotFoundException('La ventanilla editada no existe');
-    const validServices = await this._checkAllowedServices(counterDB.branch, services);
+    if (props.ip !== counterDB.ip) await this._checkDuplicateIp(props.ip);
+    let validServices = counterDB.services;
+    if (services) {
+      const { servicesDB } = await this._checkBranchServices(counterDB.branchId, services);
+      validServices = servicesDB;
+    }
     try {
-      await this.deskRepository.save({
-        id,
-        ...props,
-        services: validServices,
-      });
+      await this.deskRepository.save({ id: id, services: validServices, ...props });
       return await this.deskRepository.findOne({
         where: { id: id },
-        relations: { user: true },
-        select: { user: { id: true, fullname: true } },
+        relations: ['services', 'branch'],
+        select: { services: { id: true, name: true }, branch: { id: true, name: true } },
       });
     } catch (error) {
       this._handleErrors(error);
@@ -90,17 +81,15 @@ export class CounterService {
   }
 
   private async _checkBranchServices(
-    id_branch: string,
-    services: string[],
+    branchId: string,
+    servicesIds: string[],
   ): Promise<{ branchDB: Branch; servicesDB: Service[] }> {
-    const branch = await this.branchRepository.findOne({ where: { id: id_branch }, relations: { services: true } });
-    if (!branch) throw new BadRequestException(`La sucursal ${id_branch} no existe.`);
-    const validServices = await this.serviceRepository.findBy({ id: In(services) });
-    validServices.forEach(({ id }) => {
-      const isValid = branch.services.find((item) => item.id === id);
-      if (!isValid) throw new BadRequestException(`Solo puede asignar servicio de la sucursal ${branch.name}`);
-    });
-    return { branchDB: branch, servicesDB: validServices };
+    const branch = await this.branchRepository.findOne({ where: { id: branchId }, relations: { services: true } });
+    if (!branch) throw new BadRequestException(`La sucursal ${branchId} no existe.`);
+    const services = await this.serviceRepository.findBy({ id: In(servicesIds) });
+    const invalid = services.some(({ id }) => !branch.services.find((item) => item.id === id));
+    if (invalid) throw new BadRequestException(`Solo puede asignar servicio de la sucursal ${branch.name}`);
+    return { branchDB: branch, servicesDB: services };
   }
 
   private _handleErrors(error: any) {

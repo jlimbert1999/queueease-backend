@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Ip } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { Public, UserRequest } from './decorators';
@@ -15,8 +15,7 @@ export class AuthController {
   }
 
   @Get()
-  checkAuth(@UserRequest() user: User, @Ip() ip: string) {
-    console.log(ip);
+  checkAuth(@UserRequest() user: User) {
     return this.authService.checkAuthStatus(user.id);
   }
 }
