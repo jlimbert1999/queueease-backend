@@ -19,7 +19,7 @@ export class CounterGuard implements CanActivate {
     const counter = await this.counterRepository.findOne({
       where: { ip: request['ip'] },
       relations: { branch: true, services: true },
-      select: { branch: { id: true }, services: { id: true, name: true } },
+      select: { branch: { id: true, name:true }, services: { id: true, name: true } },
     });
     if (!counter) throw new ForbiddenException(`El equipo ${request['ip']} no esta registrado`);
     request['counter'] = counter;

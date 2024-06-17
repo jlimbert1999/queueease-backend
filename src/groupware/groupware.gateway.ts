@@ -12,6 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { GroupwareService } from './groupware.service';
 import { ServiceRequest } from 'src/ticketing/entities';
 import { BranchGateway } from './branch.gateway';
+import { advertisement } from './interfaces';
 
 @WebSocketGateway({
   namespace: 'users',
@@ -56,9 +57,9 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
     }
   }
 
-  @SubscribeMessage('test')
-  handleEvent(@MessageBody() data: ServiceRequest) {
+  @SubscribeMessage('notify')
+  handleEvent(@MessageBody() data: { branchId: string; advertisement: advertisement }) {
     console.log(data);
-    // this.branchGateway.announceRequest();
+    this.branchGateway.announceRequest(data.branchId, data.advertisement);
   }
 }

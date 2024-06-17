@@ -1,6 +1,4 @@
 import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
-import { UserRequest } from 'src/auth/decorators';
-import { User } from 'src/users/entities/user.entity';
 import { GroupwareGateway } from 'src/groupware/groupware.gateway';
 import { onlyAssignedCounter } from '../decorators/only-assigned-counter.decorator';
 import { RequestService } from '../services';

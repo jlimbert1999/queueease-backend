@@ -57,7 +57,7 @@ export class CounterService {
   async update(id: string, { services, ...props }: UpdateCounterDto) {
     const counterDB = await this.deskRepository.findOneBy({ id: id });
     if (!counterDB) throw new NotFoundException('La ventanilla editada no existe');
-    if (props.ip !== counterDB.ip) await this._checkDuplicateIp(props.ip);
+    // if (props.ip !== counterDB.ip) await this._checkDuplicateIp(props.ip);
     let validServices = counterDB.services;
     if (services) {
       const { servicesDB } = await this._checkBranchServices(counterDB.branchId, services);

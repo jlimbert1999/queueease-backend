@@ -28,7 +28,6 @@ export class GroupwareService {
     if (this.counters[counter.id].socketIds.length === 0) {
       delete this.counters[counter.id];
     }
-    console.log(this.getCounters());
   }
 
   getCounters() {

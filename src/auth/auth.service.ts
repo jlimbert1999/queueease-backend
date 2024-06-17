@@ -42,9 +42,9 @@ export class AuthService {
   }
 
   private _generateRoute(user: User) {
-    if (user.roles.includes(UserRole.ADMIN)) return 'administration';
-    if (user.roles.includes(UserRole.OFFICER)) return 'queue';
-    return '';
+    if (user.roles.includes(UserRole.ADMIN)) return '/main/administration';
+    if (user.roles.includes(UserRole.OFFICER)) return '/main/queue';
+    return '/main';
   }
 
   private _generateMenu(roles: string[]): menuFrontend[] {
