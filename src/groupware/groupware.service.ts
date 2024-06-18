@@ -18,7 +18,6 @@ export class GroupwareService {
       ...counter,
       socketIds: [...socketIds, id_socket],
     };
-    console.log(this.getCounters());
   }
 
   onCounterDisconnected(id_socket: string) {

@@ -30,6 +30,11 @@ export class RequestController {
   async getNextRequest(@CounterRequest() counter: Counter) {
     const request = await this.requestService.getNextRequest(counter);
     this.groupwareGateway.notifyRequestHandled(request.branchId, request.serviceId, request.id);
+    this.branchGateway.announceRequest(counter.branchId, {
+      code: request.code,
+      counterNumber: counter.number,
+      id: request.id,
+    });
     return request;
   }
 

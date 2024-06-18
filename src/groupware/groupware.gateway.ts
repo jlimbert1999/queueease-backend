@@ -59,7 +59,6 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   @SubscribeMessage('notify')
   handleEvent(@MessageBody() data: { branchId: string; advertisement: advertisement }) {
-    console.log(data);
     this.branchGateway.announceRequest(data.branchId, data.advertisement);
   }
 }
