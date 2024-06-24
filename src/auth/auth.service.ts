@@ -3,10 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { AuthDto } from './dto/auth.dto';
+
 import { User, UserRole } from 'src/users/entities/user.entity';
-import { JwtPayload } from './interfaces/jwt.interface';
-import { menuFrontend } from './interfaces/menu-frontend.interface';
+import { JwtPayload, menuFrontend } from './interfaces';
+import { MENU_FRONTEND } from './constants/menu';
+import { AuthDto } from './dtos/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -27,10 +28,10 @@ export class AuthService {
     };
   }
 
-  async checkAuthStatus(id_user: string) {
-    const userDB = await this.userRepository.findOne({ where: { id: id_user } });
+  async checkAuthStatus(userId: string) {
+    const userDB = await this.userRepository.findOneBy({ id: userId });
     if (!userDB) throw new UnauthorizedException();
-    return { token: this._generateToken(userDB), menu: this._generateMenu(userDB.roles) };
+    return { token: this._generateToken(userDB), menu: this._generateMenu(userDB.roles), roles: userDB.roles };
   }
 
   private _generateToken(user: User): string {
@@ -41,42 +42,16 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  private _generateRoute(user: User) {
+  private _generateRoute(user: User): string {
     if (user.roles.includes(UserRole.ADMIN)) return '/main/administration';
     if (user.roles.includes(UserRole.OFFICER)) return '/main/queue';
     return '/main';
   }
 
   private _generateMenu(roles: string[]): menuFrontend[] {
-    const menu: menuFrontend[] = [];
-    if (roles.includes(UserRole.ADMIN)) {
-      menu.push({
-        label: 'Administracion',
-        icon: 'pi pi-list',
-        items: [
-          {
-            label: 'Categorias',
-            routerLink: 'administration/categories',
-          },
-          {
-            label: 'Servicios',
-            routerLink: 'administration/services',
-          },
-          {
-            label: 'Sucursales',
-            routerLink: 'administration/branches',
-          },
-          {
-            label: 'Ventanillas',
-            routerLink: 'administration/counters',
-          },
-          {
-            label: 'Usuarios',
-            routerLink: 'administration/users',
-          },
-        ],
-      });
-    }
-    return menu;
+    const menu = MENU_FRONTEND;
+    return menu
+      .filter(({ role }) => roles.includes(role))
+      .reduce((previus, current) => [...previus, ...current.menu], []);
   }
 }
