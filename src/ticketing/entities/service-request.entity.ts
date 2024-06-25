@@ -19,7 +19,7 @@ export class ServiceRequest {
   @Column()
   code: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
   @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })

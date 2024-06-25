@@ -126,20 +126,14 @@ export class BranchesService {
       where: { id },
       relations: { services: { category: true } },
     });
-    const menu = branchDB.services.reduce((acc, current) => {
-      if (current.category) {
-        if (!acc[current.category.name]) {
-          acc[current.category.name] = {
-            name: current.category.name,
-            services: [{ value: current.id, name: current.name, services: [] }],
-          };
-        } else {
-          acc[current.category.name]['services'].push({ value: current.id, name: current.name, services: [] });
-        }
-      } else {
-        acc[current.name] = { value: current.id, name: current.name, services: [] };
-      }
-      return { ...acc };
+    const menu = branchDB.services.reduce((acc, { category, name, id }) => {
+      const service = { value: id, name: name, services: [] };
+      if (!category) return { ...acc, [name]: service };
+      const { services } = acc[category.name] ?? { services: [] };
+      return {
+        ...acc,
+        [category.name]: { name: category.name, services: [...services, service] },
+      };
     }, {});
     return Object.values(menu);
   }

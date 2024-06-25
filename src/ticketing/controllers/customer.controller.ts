@@ -16,9 +16,9 @@ export class CustomerController {
     private groupwareGateway: GroupwareGateway,
   ) {}
 
-  @Get('menu/:id_branch')
-  getMenu(@Param('id_branch') id_branch: string) {
-    return this.branchService.getMenu(id_branch);
+  @Get('menu/:branchId')
+  getMenu(@Param('branchId') branchId: string) {
+    return this.branchService.getMenu(branchId);
   }
 
   @Get('advertisement/:id_branch')
@@ -35,6 +35,7 @@ export class CustomerController {
   async createRequest(@Body() data: CreateRequestServiceDto) {
     const request = await this.customerService.createRequest(data);
     this.groupwareGateway.notifyNewRequest(request);
-    return { code: request.code };
+    const { code, createdAt, service } = request;
+    return { code: code, description: service.name, date: createdAt };
   }
 }
