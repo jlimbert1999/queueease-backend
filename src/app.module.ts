@@ -1,6 +1,8 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Logger, Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import configuration from './config/configuration';
@@ -11,7 +13,7 @@ import { UserModule } from './users/user.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { TicketingModule } from './ticketing/ticketing.module';
 import { FilesModule } from './files/files.module';
-
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -29,6 +31,9 @@ import { FilesModule } from './files/files.module';
         synchronize: true,
       }),
       inject: [ConfigService],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
     }),
     AuthModule,
     UserModule,
