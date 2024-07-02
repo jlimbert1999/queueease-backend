@@ -1,20 +1,21 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Repository } from 'typeorm';
+
 import { RequestStatus, ServiceRequest } from '../entities';
-import { UpdateRequestServiceDto } from '../dtos';
 import { Counter } from 'src/administration/entities';
+import { UpdateRequestServiceDto } from '../dtos';
 
 @Injectable()
-export class RequestService {
+export class AttentionService {
   constructor(@InjectRepository(ServiceRequest) private requestRepository: Repository<ServiceRequest>) {}
 
   async getPendingsByCounter(counter: Counter) {
     return await this.requestRepository.find({
       where: {
         status: RequestStatus.PENDING,
-        branch: { id: counter.branch.id },
-        service: In(counter.services.map((el) => el.id)),
+        branchId: counter.branchId,
+        service: In(counter.services.map(({ id }) => id)),
       },
       order: {
         priority: 'DESC',
