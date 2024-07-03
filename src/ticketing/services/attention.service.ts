@@ -39,7 +39,7 @@ export class AttentionService {
     const request = await this.requestRepository.findOne({
       where: {
         status: RequestStatus.PENDING,
-        branch: { id: counter.branchId },
+        branchId: counter.branchId,
         service: In(counter.services.map(({ id }) => id)),
         counter: IsNull(),
       },

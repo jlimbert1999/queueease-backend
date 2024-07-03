@@ -31,9 +31,9 @@ export class AttentionController {
     const request = await this.attentionService.getNextRequest(counter);
     this.groupwareGateway.notifyRequestHandled(request.branchId, request.serviceId, request.id);
     this.branchGateway.announceRequest(counter.branchId, {
+      id: request.id,
       code: request.code,
       counterNumber: counter.number,
-      id: request.id,
     });
     return request;
   }

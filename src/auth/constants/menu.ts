@@ -34,6 +34,6 @@ export const MENU_FRONTEND = [
   },
   {
     role: UserRole.OFFICER,
-    menu: [],
+    menu: [{ label: 'Atencion', icon: 'pi pi-list', routerLink: 'queue' }],
   },
 ] as const;
