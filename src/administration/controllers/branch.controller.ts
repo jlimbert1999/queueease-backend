@@ -40,8 +40,5 @@ export class BranchController {
     return this.branchService.getBranchServices(id);
   }
 
-  @Get('menu/:id')
-  getMenu(@Param('id') id: string) {
-    return this.branchService.getMenu(id);
-  }
+
 }

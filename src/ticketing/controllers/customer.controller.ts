@@ -16,16 +16,6 @@ export class CustomerController {
     private groupwareGateway: GroupwareGateway,
   ) {}
 
-  @Get('menu/:branchId')
-  getMenu(@Param('branchId') branchId: string) {
-    return this.branchService.getMenu(branchId);
-  }
-
-  @Get('advertisement/:id_branch')
-  getBranchAdvertisements(@Param('id_branch') id_branch: string) {
-    return this.branchService.getBranchAdvertisement(id_branch);
-  }
-
   @Get('branches/:term')
   getBranches(@Param('term') term: string) {
     return this.branchService.searchAvailables(term);
@@ -37,5 +27,10 @@ export class CustomerController {
     this.groupwareGateway.notifyNewRequest(request);
     const { code, createdAt, service } = request;
     return { code: code, description: service.name, date: createdAt };
+  }
+
+  @Get('branch/:id')
+  getConfig(@Param('id') id: string) {
+    return this.branchService.getBranchConfig(id);
   }
 }

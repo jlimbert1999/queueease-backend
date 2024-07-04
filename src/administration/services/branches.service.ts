@@ -2,8 +2,8 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, ILike, In, Repository } from 'typeorm';
-import * as fs from 'fs';
 import * as path from 'path';
+import * as fs from 'fs';
 
 import { Branch, BranchVideo, Service } from '../entities';
 import { CreateBranchDto, UpdateBranchDto } from '../dtos';
@@ -32,7 +32,7 @@ export class BranchesService {
 
     return {
       branches: branches.map(({ videos, ...props }) => ({
-        videos: videos.map((video) => this._buildUrlVideo(video)),
+        videos: this._generatePlaylist(videos),
         ...props,
       })),
       length,
@@ -97,7 +97,7 @@ export class BranchesService {
         where: { id },
         relations: { services: true, videos: true },
       });
-      return { ...updatedBranch, videos: updatedBranch.videos.map((video) => this._buildUrlVideo(video)) };
+      return { ...updatedBranch, videos: this._generatePlaylist(updatedBranch.videos) };
     } catch (err) {
       await queryRunner.rollbackTransaction();
       this._deleteVideosBranch(videos);
@@ -108,7 +108,6 @@ export class BranchesService {
   }
 
   async searchAvailables(term: string) {
-    console.log(term);
     return await this.branchRepository.find({
       where: { name: ILike(`%${term}%`) },
       take: 5,
@@ -121,12 +120,28 @@ export class BranchesService {
     return branchDB.services;
   }
 
-  async getMenu(id: string) {
+  async getBranchConfig(id: string) {
     const branchDB = await this.branchRepository.findOne({
       where: { id },
-      relations: { services: { category: true } },
+      relations: {
+        videos: true,
+        services: { category: true },
+      },
     });
-    const menu = branchDB.services.reduce((acc, { category, name, id }) => {
+    if (!branchDB) throw new BadRequestException(`La sucursal ${id} no existe`);
+    const menu = this._generateMenu(branchDB.services);
+    const videos = this._generatePlaylist(branchDB.videos);
+    return {
+      id: branchDB.id,
+      name: branchDB.name,
+      message: branchDB.marqueeMessage,
+      menu: menu,
+      videos: videos,
+    };
+  }
+
+  private _generateMenu(services: Service[]) {
+    const menu = services.reduce((acc, { category, name, id }) => {
       const service = { value: id, name: name, services: [] };
       if (!category) return { ...acc, [name]: service };
       const { services } = acc[category.name] ?? { services: [] };
@@ -138,30 +153,9 @@ export class BranchesService {
     return Object.values(menu);
   }
 
-  async getBranchAdvertisement(id: string) {
-    const branch = await this.branchRepository.findOne({
-      where: { id: id },
-      relations: { videos: true },
-    });
-
-    return { message: branch.marqueeMessage, videos: branch.videos.map((el) => this._buildUrlVideo(el)) };
-  }
-
-  private _buildUrlVideo(video: BranchVideo): string {
+  private _generatePlaylist(videos: BranchVideo[]) {
     const host = this.configService.getOrThrow('host');
-    return `${host}/files/branch/${video.url}`;
-
-    // switch (video.platform) {
-    //   case VideoPlatform.FACEBOOK:
-    //     break;
-    //   case VideoPlatform.YOUTUBE:
-    //     secureUrl = `https://www.youtube.com/embed/${video.url}?autoplay=1&playlist=${video.url}&loop=1&muted=1`;
-    //     break;
-    //   default:
-    //     secureUrl = `${secureUrl}/files/branch/${video.url}`;
-    //     break;
-    // }
-    // return secureUrl;
+    return videos.map((video) => `${host}/files/branch/${video.url}`);
   }
 
   private _deleteVideosBranch(fileNames: string[]): void {
@@ -170,4 +164,16 @@ export class BranchesService {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
   }
+
+  // switch (video.platform) {
+  //   case VideoPlatform.FACEBOOK:
+  //     break;
+  //   case VideoPlatform.YOUTUBE:
+  //     secureUrl = `https://www.youtube.com/embed/${video.url}?autoplay=1&playlist=${video.url}&loop=1&muted=1`;
+  //     break;
+  //   default:
+  //     secureUrl = `${secureUrl}/files/branch/${video.url}`;
+  //     break;
+  // }
+  // return secureUrl;
 }
