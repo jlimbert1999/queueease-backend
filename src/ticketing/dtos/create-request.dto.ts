@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsUUID } from 'class-validator';
+import { IsNumber, IsPositive, IsUUID } from 'class-validator';
 
 export class CreateRequestServiceDto {
   @IsUUID()
@@ -9,6 +9,7 @@ export class CreateRequestServiceDto {
   id_branch: string;
 
   @IsNumber()
+  @IsPositive()
   @Type(() => Number)
-  priority: number;
+  preferenceId: number;
 }

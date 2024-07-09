@@ -9,7 +9,11 @@ import { AttentionService, CustomerService } from './services';
 import { ServiceRequest } from './entities';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ServiceRequest]), AdministrationModule, GroupwareModule],
+  imports: [
+    AdministrationModule,
+    GroupwareModule,
+    TypeOrmModule.forFeature([ServiceRequest]),
+  ],
   controllers: [AttentionController, CustomerController],
   providers: [AttentionService, CustomerService],
 })

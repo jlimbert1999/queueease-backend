@@ -1,11 +1,16 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, ILike, In, Repository } from 'typeorm';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import { Branch, BranchVideo, Service } from '../entities';
+import { Branch, BranchVideo, Preference, Service } from '../entities';
 import { CreateBranchDto, UpdateBranchDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
 
@@ -14,7 +19,10 @@ export class BranchesService {
   constructor(
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
-    @InjectRepository(BranchVideo) private branchVideoRepository: Repository<BranchVideo>,
+    @InjectRepository(BranchVideo)
+    private branchVideoRepository: Repository<BranchVideo>,
+    @InjectRepository(Preference)
+    private preferenceRepository: Repository<Preference>,
     private configService: ConfigService,
     private readonly dataSource: DataSource,
   ) {}
@@ -59,20 +67,29 @@ export class BranchesService {
 
   async create(branchDto: CreateBranchDto) {
     const { services, videos, ...props } = branchDto;
-    const serviceDB = await this.serviceRepository.find({ where: { id: In(services) } });
+    const serviceDB = await this.serviceRepository.find({
+      where: { id: In(services) },
+    });
     const branch = this.branchRepository.create({
       ...props,
       services: serviceDB,
-      videos: videos.map((video) => this.branchVideoRepository.create({ url: video })),
+      videos: videos.map((video) =>
+        this.branchVideoRepository.create({ url: video }),
+      ),
     });
     return await this.branchRepository.save(branch);
   }
 
   async update(id: string, branchDto: UpdateBranchDto) {
     const { services, videos, ...props } = branchDto;
-    const branchDB = await this.branchRepository.findOne({ where: { id }, relations: { videos: true } });
+    const branchDB = await this.branchRepository.findOne({
+      where: { id },
+      relations: { videos: true },
+    });
     if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
-    const updatedServices = await this.serviceRepository.find({ where: { id: In(services) } });
+    const updatedServices = await this.serviceRepository.find({
+      where: { id: In(services) },
+    });
     let deletedVideos = branchDB.videos;
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -82,7 +99,9 @@ export class BranchesService {
     try {
       if (videos.length > 0) {
         await queryRunner.manager.delete(BranchVideo, { branch: { id } });
-        branchDB.videos = videos.map((video) => this.branchVideoRepository.create({ url: video }));
+        branchDB.videos = videos.map((video) =>
+          this.branchVideoRepository.create({ url: video }),
+        );
       } else {
         deletedVideos = [];
       }
@@ -97,7 +116,10 @@ export class BranchesService {
         where: { id },
         relations: { services: true, videos: true },
       });
-      return { ...updatedBranch, videos: this._generatePlaylist(updatedBranch.videos) };
+      return {
+        ...updatedBranch,
+        videos: this._generatePlaylist(updatedBranch.videos),
+      };
     } catch (err) {
       await queryRunner.rollbackTransaction();
       this._deleteVideosBranch(videos);
@@ -115,7 +137,10 @@ export class BranchesService {
   }
 
   async getBranchServices(id: string) {
-    const branchDB = await this.branchRepository.findOne({ where: { id: id }, relations: { services: true } });
+    const branchDB = await this.branchRepository.findOne({
+      where: { id: id },
+      relations: { services: true },
+    });
     if (!branchDB) throw new BadRequestException(`La sucursal ${id} no existe`);
     return branchDB.services;
   }
@@ -129,6 +154,7 @@ export class BranchesService {
       },
     });
     if (!branchDB) throw new BadRequestException(`La sucursal ${id} no existe`);
+    const preferences = await this._generatePreferences();
     const menu = this._generateMenu(branchDB.services);
     const videos = this._generatePlaylist(branchDB.videos);
     return {
@@ -137,6 +163,7 @@ export class BranchesService {
       message: branchDB.marqueeMessage,
       menu: menu,
       videos: videos,
+      preferences: preferences,
     };
   }
 
@@ -147,7 +174,10 @@ export class BranchesService {
       const { services } = acc[category.name] ?? { services: [] };
       return {
         ...acc,
-        [category.name]: { name: category.name, services: [...services, service] },
+        [category.name]: {
+          name: category.name,
+          services: [...services, service],
+        },
       };
     }, {});
     return Object.values(menu);
@@ -156,6 +186,13 @@ export class BranchesService {
   private _generatePlaylist(videos: BranchVideo[]) {
     const host = this.configService.getOrThrow('host');
     return videos.map((video) => `${host}/files/branch/${video.url}`);
+  }
+
+  private async _generatePreferences() {
+    return await this.preferenceRepository.find({
+      where: { active: true },
+      select: ['id', 'name'],
+    });
   }
 
   private _deleteVideosBranch(fileNames: string[]): void {

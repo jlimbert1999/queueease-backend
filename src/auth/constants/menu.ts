@@ -28,6 +28,10 @@ export const MENU_FRONTEND = [
             label: 'Usuarios',
             routerLink: 'administration/users',
           },
+          {
+            label: 'Preferencias',
+            routerLink: 'administration/preferences',
+          },
         ],
       },
     ],

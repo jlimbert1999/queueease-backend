@@ -1,4 +1,4 @@
-import { Branch, Service, Counter } from 'src/administration/entities';
+import { Branch, Service, Counter, Preference } from 'src/administration/entities';
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
 
 export enum RequestStatus {
@@ -13,8 +13,8 @@ export class ServiceRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'int', default: 0 })
-  priority: number;
+  // @Column({ type: 'int', default: 0 })
+  // priority: number;
 
   @Column()
   code: string;
@@ -30,6 +30,9 @@ export class ServiceRequest {
 
   @ManyToOne(() => Branch, (branch) => branch.serviceRequests)
   branch: Branch;
+
+  @ManyToOne(() => Preference, (preference) => preference.requests)
+  preference: Preference;
 
   @ManyToOne(() => Counter, { nullable: true, eager: true })
   counter?: Counter;

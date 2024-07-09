@@ -26,6 +26,7 @@ export class CustomerController {
     const request = await this.customerService.createRequest(data);
     this.groupwareGateway.notifyNewRequest(request);
     const { code, createdAt, service } = request;
+    console.log({ codigo: code, servicio: service.name, fecha: createdAt });
     return { code: code, description: service.name, date: createdAt };
   }
 

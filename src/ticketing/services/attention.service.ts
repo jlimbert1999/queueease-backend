@@ -8,7 +8,10 @@ import { UpdateRequestServiceDto } from '../dtos';
 
 @Injectable()
 export class AttentionService {
-  constructor(@InjectRepository(ServiceRequest) private requestRepository: Repository<ServiceRequest>) {}
+  constructor(
+    @InjectRepository(ServiceRequest)
+    private requestRepository: Repository<ServiceRequest>,
+  ) {}
 
   async getPendingsByCounter(counter: Counter) {
     return await this.requestRepository.find({
@@ -18,7 +21,7 @@ export class AttentionService {
         service: In(counter.services.map(({ id }) => id)),
       },
       order: {
-        priority: 'DESC',
+        preference: { priority: 'DESC' },
         createdAt: 'ASC',
       },
     });
@@ -35,7 +38,10 @@ export class AttentionService {
 
   async getNextRequest(counter: Counter) {
     const currentRequest = await this.getCurrentRequestByCounter(counter);
-    if (currentRequest) throw new BadRequestException(`La solicitud ${currentRequest.code} aun esta en atencion`);
+    if (currentRequest)
+      throw new BadRequestException(
+        `La solicitud ${currentRequest.code} aun esta en atencion`,
+      );
     const request = await this.requestRepository.findOne({
       where: {
         status: RequestStatus.PENDING,
@@ -44,7 +50,7 @@ export class AttentionService {
         counter: IsNull(),
       },
       order: {
-        priority: 'DESC',
+        preference: { priority: 'DESC' },
         createdAt: 'ASC',
       },
     });
@@ -59,7 +65,8 @@ export class AttentionService {
 
   async updateRequest(id: string, { status }: UpdateRequestServiceDto) {
     const request = await this.requestRepository.preload({ id, status });
-    if (!request) throw new BadRequestException(`La solicitud ${id} no existe.`);
+    if (!request)
+      throw new BadRequestException(`La solicitud ${id} no existe.`);
     await this.requestRepository.save(request);
     return { message: 'Solicitud actualizada' };
   }
