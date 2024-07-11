@@ -30,17 +30,14 @@ export class CustomerService {
       relations: { branches: true },
       select: { branches: { id: true } },
     });
-    if (!service)
-      throw new BadRequestException('El servicio solicitado no existe');
+    if (!service) throw new BadRequestException('El servicio solicitado no existe');
     const branch = service.branches.find((branch) => branch.id === id_branch);
-    if (!branch)
-      throw new BadRequestException('La sucursal proporcionada no es valida');
+    if (!branch) throw new BadRequestException('La sucursal proporcionada no es valida');
 
     const preference = await this.preferenceRepository.findOneBy({
       id: preferenceId,
     });
-    if (!preference)
-      throw new BadRequestException('La preferencia solicitada no existe');
+    if (!preference) throw new BadRequestException('La preferencia solicitada no existe');
     const code = await this._generateRequestCode({
       serviceId: service.id,
       branchId: branch.id,
@@ -56,12 +53,7 @@ export class CustomerService {
     return await this.requestRepository.save(newRequest);
   }
 
-  private async _generateRequestCode({
-    code,
-    branchId,
-    serviceId,
-    preference,
-  }: codeOptions) {
+  private async _generateRequestCode({ code, branchId, serviceId, preference }: codeOptions) {
     const currentDate = new Date();
     const startDate = new Date(currentDate);
     startDate.setHours(0, 0, 0, 0);

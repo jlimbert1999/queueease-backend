@@ -2,18 +2,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Logger, Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import configuration from './config/configuration';
-
 import { AdministrationModule } from './administration/administration.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './users/user.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { TicketingModule } from './ticketing/ticketing.module';
 import { FilesModule } from './files/files.module';
-import { join } from 'path';
 
 @Module({
   imports: [
@@ -42,7 +39,7 @@ import { join } from 'path';
     AdministrationModule,
     FilesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, Logger],
+  controllers: [],
+  providers: [Logger],
 })
 export class AppModule {}

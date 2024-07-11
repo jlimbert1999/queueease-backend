@@ -13,9 +13,6 @@ export class ServiceRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // @Column({ type: 'int', default: 0 })
-  // priority: number;
-
   @Column()
   code: string;
 
@@ -34,7 +31,7 @@ export class ServiceRequest {
   @ManyToOne(() => Preference, (preference) => preference.requests)
   preference: Preference;
 
-  @ManyToOne(() => Counter, { nullable: true, eager: true })
+  @ManyToOne(() => Counter, { nullable: true,    })
   counter?: Counter;
 
   @Column({ nullable: true })
