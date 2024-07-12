@@ -1,6 +1,6 @@
 import { BadRequestException, HttpException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, IsNull, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, IsNull, Repository } from 'typeorm';
 
 import { RequestStatus, ServiceRequest } from '../entities';
 import { Counter } from 'src/administration/entities';
@@ -38,35 +38,60 @@ export class AttentionService {
   }
 
   async getNextRequest(counter: Counter) {
-    const current = await this.getCurrentRequestByCounter(counter);
-    if (current) throw new BadRequestException(`La solicitud ${current.code} aun esta en atencion`);
+    // const request = await this.requestRepository.findOne({
+    //   where: {
+    //     status: RequestStatus.PENDING,
+    //     branchId: counter.branchId,
+    //     service: In(counter.services.map(({ id }) => id)),
+    //     counter: IsNull(),
+    //   },
+    //   relations: { preference: true },
+    //   order: {
+    //     preference: { priority: 'DESC' },
+    //     createdAt: 'ASC',
+    //   },
+    // });
+    // if (!request) throw new BadRequestException('No hay solicitudes en cola');
+    // const result = await this.requestRepository.preload({
+    //   id: request.id,
+    //   counter: counter,
+    //   status: RequestStatus.SERVICING,
+    // });
+    // const s = await this.requestRepository.save(result);
+    // console.log('solictud atendida', request.code);
+    // return s;
+
+    // const current = await this.getCurrentRequestByCounter(counter);
+    // if (current) throw new BadRequestException(`La solicitud ${current.code} aun esta en atencion`);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-    await queryRunner.startTransaction();
     try {
-      const request = await queryRunner.manager.findOne(ServiceRequest, {
-        where: {
+      await queryRunner.startTransaction();
+      const entityManager: EntityManager = queryRunner.manager;
+      const request = await entityManager
+        .createQueryBuilder(ServiceRequest, 'request')
+        .leftJoinAndSelect('request.preference', 'preference')
+        .where({
           status: RequestStatus.PENDING,
           branchId: counter.branchId,
           serviceId: In(counter.services.map(({ id }) => id)),
           counterId: IsNull(),
-        },
-        relations: { preference: true },
-        order: {
-          preference: { priority: 'DESC' },
-          createdAt: 'ASC',
-        },
-      });
-      if (!request) throw new BadRequestException('No hay solicitudes en cola');
-      await queryRunner.manager.findOne(ServiceRequest, {
-        where: { id: request.id },
-        lock: { mode: 'pessimistic_write' },
-      });
+        })
+        .orderBy('preference.priority', 'DESC')
+        .addOrderBy('request.createdAt', 'ASC')
+        .setLock('pessimistic_write')
+        .getOne();
+      // if (!request) throw new BadRequestException('No hay solicitudes en cola');
+      // await queryRunner.manager.findOne(ServiceRequest, {
+      //   where: { id: request.id },
+      //   lock: { mode: 'pessimistic_write' },
+      // });
       request.counter = counter;
       request.status = RequestStatus.SERVICING;
       const serviceRequest = await queryRunner.manager.save(request);
       await queryRunner.commitTransaction();
+      console.log('solicitud a anteder', request.code);
       return serviceRequest;
     } catch (error) {
       console.log(error);
@@ -87,3 +112,27 @@ export class AttentionService {
     return { message: 'Solicitud actualizada' };
   }
 }
+
+
+// TEST CODE 
+// import axios from 'axios';
+
+// const url = 'http://192.168.30.34:3000/attention/next'; // Cambia esto por tu URL
+// const token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF91c2VyIjoiMmMyYTYzYTItZTUxZi00M2ZjLWFmMDgtMTcyMjFhMGI0NjdmIiwiZnVsbG5hbWUiOiJKVUFOIFBFUkVaIiwiaWF0IjoxNzIwODE3MDM3LCJleHAiOjE3MjA4NDU4Mzd9.Pie5LaGDMRQINVUyLq_Vzy0GIPxALwkGjNR56QkWfQ0'
+// async function makeRequest() {
+//   try {
+//     await axios.get(url, {headers:{Authorization:`Bearer ${token}` }})
+//   } catch (error) {
+//     console.error(error.response.data);
+//   }
+// }
+
+// async function runConcurrentRequests() {
+//   const requests = [];
+//   for (let i = 0; i < 3; i++) {
+//     requests.push(makeRequest());
+//   }
+//   await Promise.all(requests);
+// }
+
+// await runConcurrentRequests();
