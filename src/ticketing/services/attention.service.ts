@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, IsNull, Repository } from 'typeorm';
 
@@ -38,8 +38,9 @@ export class AttentionService {
   }
 
   async getNextRequest(counter: Counter) {
-    const currentRequest = await this.getCurrentRequestByCounter(counter);
-    if (currentRequest) throw new BadRequestException(`La solicitud ${currentRequest.code} aun esta en atencion`);
+    const current = await this.getCurrentRequestByCounter(counter);
+    if (current) throw new BadRequestException(`La solicitud ${current.code} aun esta en atencion`);
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -49,22 +50,19 @@ export class AttentionService {
           status: RequestStatus.PENDING,
           branchId: counter.branchId,
           serviceId: In(counter.services.map(({ id }) => id)),
-          // counter: IsNull(),
+          counterId: IsNull(),
         },
-        // relations: { counter: true, preference: true },
-        // order: {
-        //   preference: { priority: 'DESC' },
-        //   createdAt: 'ASC',
-        // },
+        relations: { preference: true },
+        order: {
+          preference: { priority: 'DESC' },
+          createdAt: 'ASC',
+        },
+      });
+      if (!request) throw new BadRequestException('No hay solicitudes en cola');
+      await queryRunner.manager.findOne(ServiceRequest, {
+        where: { id: request.id },
         lock: { mode: 'pessimistic_write' },
       });
-      console.log('request');
-       throw Error('test')
-
-      return request
-
-      console.log('request encontrada', request);
-      if (!request) throw new BadRequestException('No hay solicitudes en cola');
       request.counter = counter;
       request.status = RequestStatus.SERVICING;
       const serviceRequest = await queryRunner.manager.save(request);
@@ -73,9 +71,11 @@ export class AttentionService {
     } catch (error) {
       console.log(error);
       await queryRunner.rollbackTransaction();
+      if (error instanceof HttpException) {
+        throw new HttpException(error.message, error.getStatus());
+      }
       throw new InternalServerErrorException('Error al atender la solicitud');
     } finally {
-      console.log('end transaction');
       await queryRunner.release();
     }
   }

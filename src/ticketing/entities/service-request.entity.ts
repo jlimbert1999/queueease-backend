@@ -31,7 +31,7 @@ export class ServiceRequest {
   @ManyToOne(() => Preference, (preference) => preference.requests)
   preference: Preference;
 
-  @ManyToOne(() => Counter, { nullable: true,    })
+  @ManyToOne(() => Counter, { nullable: true })
   counter?: Counter;
 
   @Column({ nullable: true })
@@ -39,4 +39,7 @@ export class ServiceRequest {
 
   @Column({ nullable: true })
   serviceId: string;
+
+  @Column({ nullable: true })
+  counterId: string;
 }
