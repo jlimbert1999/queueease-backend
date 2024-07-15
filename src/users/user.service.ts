@@ -18,9 +18,6 @@ export class UserService {
       order: {
         createdAt: 'DESC',
       },
-      relations: {
-        counter: true,
-      },
     });
     return { users: users.map((user) => this._removePasswordField(user)), length };
   }

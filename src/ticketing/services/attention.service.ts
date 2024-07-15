@@ -2,15 +2,15 @@ import { BadRequestException, HttpException, Injectable, InternalServerErrorExce
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, IsNull, Repository } from 'typeorm';
 
-import { RequestStatus, ServiceRequest } from '../entities';
+import { Attention, RequestStatus, ServiceRequest } from '../entities';
 import { Counter } from 'src/administration/entities';
 import { UpdateRequestServiceDto } from '../dtos';
 
 @Injectable()
 export class AttentionService {
   constructor(
-    @InjectRepository(ServiceRequest)
-    private requestRepository: Repository<ServiceRequest>,
+    @InjectRepository(ServiceRequest) private requestRepository: Repository<ServiceRequest>,
+    @InjectRepository(Attention) private attentionRepository: Repository<Attention>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -29,69 +29,109 @@ export class AttentionService {
   }
 
   async getCurrentRequestByCounter({ id }: Counter) {
-    return await this.requestRepository.findOne({
+    return await this.attentionRepository.findOne({
+      relations: { request: true, counter: true },
       where: {
         counter: { id: id },
-        status: RequestStatus.SERVICING,
+        endTime: IsNull(),
+        request: { status: RequestStatus.SERVICING },
       },
     });
   }
 
+  // async getNextRequest(counter: Counter) {
+  //   // const request = await this.requestRepository.findOne({
+  //   //   where: {
+  //   //     status: RequestStatus.PENDING,
+  //   //     branchId: counter.branchId,
+  //   //     service: In(counter.services.map(({ id }) => id)),
+  //   //     counter: IsNull(),
+  //   //   },
+  //   //   relations: { preference: true },
+  //   //   order: {
+  //   //     preference: { priority: 'DESC' },
+  //   //     createdAt: 'ASC',
+  //   //   },
+  //   // });
+  //   // if (!request) throw new BadRequestException('No hay solicitudes en cola');
+  //   // const result = await this.requestRepository.preload({
+  //   //   id: request.id,
+  //   //   counter: counter,
+  //   //   status: RequestStatus.SERVICING,
+  //   // });
+  //   // const s = await this.requestRepository.save(result);
+  //   // console.log('solictud atendida', request.code);
+  //   // return s;
+
+  //   // const current = await this.getCurrentRequestByCounter(counter);
+  //   // if (current) throw new BadRequestException(`La solicitud ${current.code} aun esta en atencion`);
+
+  //   const queryRunner = this.dataSource.createQueryRunner();
+  //   await queryRunner.connect();
+  //   try {
+  //     await queryRunner.startTransaction();
+  //     const entityManager: EntityManager = queryRunner.manager;
+  //     const request = await entityManager
+  //       .createQueryBuilder(ServiceRequest, 'request')
+  //       .leftJoinAndSelect('request.preference', 'preference')
+  //       .where({
+  //         status: RequestStatus.PENDING,
+  //         branchId: counter.branchId,
+  //         serviceId: In(counter.services.map(({ id }) => id)),
+  //         counterId: IsNull(),
+  //       })
+  //       .orderBy('preference.priority', 'DESC')
+  //       .addOrderBy('request.createdAt', 'ASC')
+  //       .setLock('pessimistic_write')
+  //       .getOne();
+  //     // if (!request) throw new BadRequestException('No hay solicitudes en cola');
+  //     // await queryRunner.manager.findOne(ServiceRequest, {
+  //     //   where: { id: request.id },
+  //     //   lock: { mode: 'pessimistic_write' },
+  //     // });
+  //     request.counter = counter;
+  //     request.status = RequestStatus.SERVICING;
+  //     const serviceRequest = await queryRunner.manager.save(request);
+  //     await queryRunner.commitTransaction();
+  //     console.log('solicitud a anteder', request.code);
+  //     return serviceRequest;
+  //   } catch (error) {
+  //     console.log(error);
+  //     await queryRunner.rollbackTransaction();
+  //     if (error instanceof HttpException) {
+  //       throw new HttpException(error.message, error.getStatus());
+  //     }
+  //     throw new InternalServerErrorException('Error al atender la solicitud');
+  //   } finally {
+  //     await queryRunner.release();
+  //   }
+  // }
+
   async getNextRequest(counter: Counter) {
-    // const request = await this.requestRepository.findOne({
-    //   where: {
-    //     status: RequestStatus.PENDING,
-    //     branchId: counter.branchId,
-    //     service: In(counter.services.map(({ id }) => id)),
-    //     counter: IsNull(),
-    //   },
-    //   relations: { preference: true },
-    //   order: {
-    //     preference: { priority: 'DESC' },
-    //     createdAt: 'ASC',
-    //   },
-    // });
-    // if (!request) throw new BadRequestException('No hay solicitudes en cola');
-    // const result = await this.requestRepository.preload({
-    //   id: request.id,
-    //   counter: counter,
-    //   status: RequestStatus.SERVICING,
-    // });
-    // const s = await this.requestRepository.save(result);
-    // console.log('solictud atendida', request.code);
-    // return s;
-
-    // const current = await this.getCurrentRequestByCounter(counter);
-    // if (current) throw new BadRequestException(`La solicitud ${current.code} aun esta en atencion`);
-
+    const attention = await this.getCurrentRequestByCounter(counter);
+    if (attention) throw new BadRequestException(`La solicitud ${attention.request.code} aun esta en atencion`);
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      await queryRunner.startTransaction();
-      const entityManager: EntityManager = queryRunner.manager;
-      const request = await entityManager
-        .createQueryBuilder(ServiceRequest, 'request')
-        .leftJoinAndSelect('request.preference', 'preference')
-        .where({
-          status: RequestStatus.PENDING,
-          branchId: counter.branchId,
+      const request = await queryRunner.manager.findOne(ServiceRequest, {
+        where: {
           serviceId: In(counter.services.map(({ id }) => id)),
-          counterId: IsNull(),
-        })
-        .orderBy('preference.priority', 'DESC')
-        .addOrderBy('request.createdAt', 'ASC')
-        .setLock('pessimistic_write')
-        .getOne();
-      // if (!request) throw new BadRequestException('No hay solicitudes en cola');
-      // await queryRunner.manager.findOne(ServiceRequest, {
-      //   where: { id: request.id },
-      //   lock: { mode: 'pessimistic_write' },
-      // });
-      request.counter = counter;
-      request.status = RequestStatus.SERVICING;
+          branchId: counter.branchId,
+          status: RequestStatus.PENDING,
+        },
+        order: {
+          priority: 'DESC',
+          createdAt: 'ASC',
+        },
+        lock: { mode: 'pessimistic_write', onLocked: 'skip_locked' },
+      });
+      if (!request) throw new BadRequestException('No hay solicitudes en cola');
+      // request.counter = counter;
+      // request.status = RequestStatus.SERVICING;
       const serviceRequest = await queryRunner.manager.save(request);
       await queryRunner.commitTransaction();
-      console.log('solicitud a anteder', request.code);
+      console.log('request atendida', serviceRequest.code);
       return serviceRequest;
     } catch (error) {
       console.log(error);
@@ -113,8 +153,7 @@ export class AttentionService {
   }
 }
 
-
-// TEST CODE 
+// TEST CODE
 // import axios from 'axios';
 
 // const url = 'http://192.168.30.34:3000/attention/next'; // Cambia esto por tu URL

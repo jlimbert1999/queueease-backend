@@ -5,21 +5,18 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
   JoinTable,
   ManyToMany,
   ManyToOne,
-  OneToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
-  Unique,
 } from 'typeorm';
 import { Branch } from './branch.entity';
 import { Service } from './service.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Attention } from 'src/ticketing/entities';
 
 @Entity()
 @Index(['number', 'branch'], { unique: true })
-@Unique(['user'])
 export class Counter {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -33,10 +30,6 @@ export class Counter {
   @ManyToOne(() => Branch, (branch) => branch.counters)
   branch: Branch;
 
-  @OneToOne(() => User, (user) => user.counter, { nullable: true })
-  @JoinColumn()
-  user?: User;
-
   @ManyToMany(() => Service)
   @JoinTable()
   services: Service[];
@@ -46,6 +39,9 @@ export class Counter {
 
   @Column({ nullable: true })
   branchId: string;
+
+  @OneToMany(() => Attention, (attention) => attention.request, { cascade: true })
+  attentions: Attention[];
 
   @BeforeInsert()
   checkIpInsert() {

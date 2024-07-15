@@ -1,5 +1,6 @@
-import { Branch, Service, Counter, Preference } from 'src/administration/entities';
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Branch, Service, Preference } from 'src/administration/entities';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToOne } from 'typeorm';
+import { Attention } from './attention.entity';
 
 export enum RequestStatus {
   ATTENDED = 'attended',
@@ -16,11 +17,14 @@ export class ServiceRequest {
   @Column()
   code: string;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  createdAt: Date;
-
   @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
   status: string;
+
+  @Column({ type: 'int' })
+  priority: number;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
 
   @ManyToOne(() => Service, (service) => service.serviceRequests)
   service: Service;
@@ -31,15 +35,12 @@ export class ServiceRequest {
   @ManyToOne(() => Preference, (preference) => preference.requests)
   preference: Preference;
 
-  @ManyToOne(() => Counter, { nullable: true })
-  counter?: Counter;
+  @OneToOne(() => Attention, (attention) => attention.request)
+  attention: Attention;
 
   @Column({ nullable: true })
   branchId: string;
 
   @Column({ nullable: true })
   serviceId: string;
-
-  @Column({ nullable: true })
-  counterId: string;
 }

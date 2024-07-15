@@ -49,6 +49,7 @@ export class CustomerService {
       service: service,
       branch: branch,
       code: code,
+      priority: preference.priority,
     });
     return await this.requestRepository.save(newRequest);
   }

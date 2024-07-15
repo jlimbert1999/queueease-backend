@@ -6,14 +6,10 @@ import { GroupwareModule } from 'src/groupware/groupware.module';
 
 import { AttentionController, CustomerController } from './controllers';
 import { AttentionService, CustomerService } from './services';
-import { ServiceRequest } from './entities';
+import { Attention, ServiceRequest } from './entities';
 
 @Module({
-  imports: [
-    AdministrationModule,
-    GroupwareModule,
-    TypeOrmModule.forFeature([ServiceRequest]),
-  ],
+  imports: [AdministrationModule, GroupwareModule, TypeOrmModule.forFeature([ServiceRequest, Attention])],
   controllers: [AttentionController, CustomerController],
   providers: [AttentionService, CustomerService],
 })
