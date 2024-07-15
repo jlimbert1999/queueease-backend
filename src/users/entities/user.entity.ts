@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Attention } from 'src/ticketing/entities';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from 'typeorm';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -29,4 +30,8 @@ export class User {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(() => Attention, (attention) => attention.user, { cascade: true })
+  attentions: Attention[];
+  
 }

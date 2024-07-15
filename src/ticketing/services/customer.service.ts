@@ -16,11 +16,9 @@ interface codeOptions {
 @Injectable()
 export class CustomerService {
   constructor(
-    @InjectRepository(ServiceRequest)
-    private requestRepository: Repository<ServiceRequest>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
-    @InjectRepository(Preference)
-    private preferenceRepository: Repository<Preference>,
+    @InjectRepository(Preference) private preferenceRepository: Repository<Preference>,
+    @InjectRepository(ServiceRequest) private requestRepository: Repository<ServiceRequest>,
   ) {}
 
   async createRequest(requestDto: CreateRequestServiceDto) {

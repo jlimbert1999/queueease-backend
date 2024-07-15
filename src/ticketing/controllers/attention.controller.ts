@@ -6,6 +6,8 @@ import { BranchGateway } from 'src/groupware/branch.gateway';
 import { UpdateRequestServiceDto } from '../dtos';
 import { CounterRequest } from '../decorators/counter-request.decorator';
 import { Counter } from 'src/administration/entities';
+import { UserRequest } from 'src/auth/decorators';
+import { User } from 'src/users/entities/user.entity';
 
 @onlyAssignedCounter()
 @Controller('attention')
@@ -27,20 +29,20 @@ export class AttentionController {
   }
 
   @Get('next')
-  async getNextRequest(@CounterRequest() counter: Counter) {
-    const request = await this.attentionService.getNextRequest(counter);
-    this.groupwareGateway.notifyRequestHandled(request.branchId, request.serviceId, request.id);
+  async getNextRequest(@CounterRequest() counter: Counter, @UserRequest() user: User) {
+    const request = await this.attentionService.getNextRequest(counter, user);
+    this.groupwareGateway.notifyRequestHandled(request.serviceRequest.branchId, request.serviceRequest.serviceId, request.serviceRequest.id);
     this.branchGateway.announceRequest(counter.branchId, {
-      id: request.id,
-      code: request.code,
+      id: request.serviceRequest.id,
+      code: request.serviceRequest.code,
       counterNumber: counter.number,
     });
     return request;
   }
 
-  @Patch(':id')
+  @Patch('handle/:id')
   async updateRequest(@Param('id') id: string, @Body() data: UpdateRequestServiceDto) {
-    return this.attentionService.updateRequest(id, data);
+    return this.attentionService.handleRequest(id, data);
   }
 
   @Get('check')

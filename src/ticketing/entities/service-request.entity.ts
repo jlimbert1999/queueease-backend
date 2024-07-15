@@ -1,5 +1,5 @@
-import { Branch, Service, Preference } from 'src/administration/entities';
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToOne } from 'typeorm';
+import { Branch, Service, Preference } from 'src/administration/entities';
 import { Attention } from './attention.entity';
 
 export enum RequestStatus {
@@ -18,7 +18,7 @@ export class ServiceRequest {
   code: string;
 
   @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
-  status: string;
+  status: RequestStatus;
 
   @Column({ type: 'int' })
   priority: number;

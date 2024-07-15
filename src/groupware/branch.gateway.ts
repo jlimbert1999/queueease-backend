@@ -25,6 +25,7 @@ export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   announceRequest(branchId: string, advertisement: advertisement) {
+    console.log(branchId, advertisement);
     const { socketIds } = this.branchConnectionService.getBranch(branchId) ?? { socketIds: [] };
     this.server.to(socketIds).emit('announce', advertisement);
   }
