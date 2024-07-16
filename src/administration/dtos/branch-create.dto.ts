@@ -6,7 +6,6 @@ export class CreateBranchDto {
 
   @IsString()
   @IsOptional()
-
   marqueeMessage: string;
 
   @IsArray()
@@ -18,4 +17,8 @@ export class CreateBranchDto {
   @IsOptional()
   @IsString({ each: true })
   videos: string[];
+
+  @IsString()
+  @IsOptional()
+  alertVideoUrl?: string;
 }

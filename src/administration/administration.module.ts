@@ -23,10 +23,12 @@ import {
   ServicesController,
 } from './controllers';
 import { UserModule } from 'src/users/user.module';
+import { GroupwareModule } from 'src/groupware/groupware.module';
 
 @Module({
   imports: [
     UserModule,
+    GroupwareModule,
     TypeOrmModule.forFeature([
       Category,
       Branch,

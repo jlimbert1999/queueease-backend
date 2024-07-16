@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, ILike, In, Repository } from 'typeorm';
@@ -11,7 +6,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { Branch, BranchVideo, Preference, Service } from '../entities';
-import { CreateBranchDto, UpdateBranchDto } from '../dtos';
+import { AnnounceDto, CreateBranchDto, UpdateBranchDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
 
 @Injectable()
@@ -31,7 +26,6 @@ export class BranchesService {
     const [branches, length] = await this.branchRepository.findAndCount({
       take: limit,
       skip: offset,
-      order: { createdAt: 'DESC' },
       relations: { services: true, videos: true },
       select: {
         services: { id: true, name: true },
@@ -73,9 +67,7 @@ export class BranchesService {
     const branch = this.branchRepository.create({
       ...props,
       services: serviceDB,
-      videos: videos.map((video) =>
-        this.branchVideoRepository.create({ url: video }),
-      ),
+      videos: videos.map((video) => this.branchVideoRepository.create({ url: video })),
     });
     return await this.branchRepository.save(branch);
   }
@@ -99,9 +91,7 @@ export class BranchesService {
     try {
       if (videos.length > 0) {
         await queryRunner.manager.delete(BranchVideo, { branch: { id } });
-        branchDB.videos = videos.map((video) =>
-          this.branchVideoRepository.create({ url: video }),
-        );
+        branchDB.videos = videos.map((video) => this.branchVideoRepository.create({ url: video }));
       } else {
         deletedVideos = [];
       }
@@ -129,10 +119,9 @@ export class BranchesService {
     }
   }
 
-  async searchAvailables(term: string) {
+  async searchAvailables(term?: string) {
     return await this.branchRepository.find({
-      where: { name: ILike(`%${term}%`) },
-      take: 5,
+      ...(term ? { where: { name: ILike(`%${term}%`) }, take: 5 } : {}),
     });
   }
 
@@ -164,7 +153,24 @@ export class BranchesService {
       menu: menu,
       videos: videos,
       preferences: preferences,
+      alertVideoUrl: branchDB.alertVideoUrl,
     };
+  }
+
+  async announce({ url, branches }: AnnounceDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.manager.update(Branch, { id: In(branches) }, { alertVideoUrl: url });
+      await queryRunner.commitTransaction();
+      return branches;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException('Error al actualizar sucursal');
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   private _generateMenu(services: Service[]) {
@@ -201,16 +207,4 @@ export class BranchesService {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
   }
-
-  // switch (video.platform) {
-  //   case VideoPlatform.FACEBOOK:
-  //     break;
-  //   case VideoPlatform.YOUTUBE:
-  //     secureUrl = `https://www.youtube.com/embed/${video.url}?autoplay=1&playlist=${video.url}&loop=1&muted=1`;
-  //     break;
-  //   default:
-  //     secureUrl = `${secureUrl}/files/branch/${video.url}`;
-  //     break;
-  // }
-  // return secureUrl;
 }

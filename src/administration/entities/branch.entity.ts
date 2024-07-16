@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany } from 'typeorm';
 import { ServiceRequest } from 'src/ticketing/entities';
 import { Service, Counter, BranchVideo } from './';
 
@@ -25,6 +25,6 @@ export class Branch {
   @OneToMany(() => ServiceRequest, (serviceRequest) => serviceRequest.branch)
   serviceRequests: ServiceRequest[];
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @Column({ nullable: true })
+  alertVideoUrl?: string;
 }
