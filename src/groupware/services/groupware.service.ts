@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { counterPayload } from './interfaces';
+import { counterPayload } from '../interfaces';
 
 interface CounterSocket {
   id: string;

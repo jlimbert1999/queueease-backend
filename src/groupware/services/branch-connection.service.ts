@@ -31,8 +31,8 @@ export class BranchConnectionService {
     return Object.values(this.branches);
   }
 
-  getBranch(id_branch: string): BranchSocket | undefined {
-    return this.getBranches().find((branch) => branch.id === id_branch);
+  getBranch(branchId: string): BranchSocket | undefined {
+    return this.getBranches().find((branch) => branch.id === branchId);
   }
 
   checkBranchIsValid(object: { [key: string]: any } = {}): [string?, branch?] {

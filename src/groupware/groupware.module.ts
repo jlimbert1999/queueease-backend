@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
-import { GroupwareService } from './groupware.service';
+import { GroupwareService } from './services/groupware.service';
 import { GroupwareGateway } from './groupware.gateway';
 import { BranchConnectionService } from './services/branch-connection.service';
 import { BranchGateway } from './branch.gateway';

@@ -9,7 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 
-import { GroupwareService } from './groupware.service';
+import { GroupwareService } from './services/groupware.service';
 import { ServiceRequest } from 'src/ticketing/entities';
 import { BranchGateway } from './branch.gateway';
 import { advertisement } from './interfaces';
@@ -25,8 +25,8 @@ export class GroupwareGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   constructor(
     private jwtService: JwtService,
-    private groupwareService: GroupwareService,
     private branchGateway: BranchGateway,
+    private groupwareService: GroupwareService,
   ) {}
 
   handleConnection(socket: Socket) {

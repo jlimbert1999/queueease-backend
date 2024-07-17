@@ -43,14 +43,18 @@ export class AttentionService {
         attention: { counter: { id: counter.id } },
       },
     });
-    if (!current) return undefined;
-    const { attention:{startTime, endTime}, ...props } = current;
+    if (!current) return null;
+    const {
+      attention: { startTime, endTime },
+      ...props
+    } = current;
     return { serviceRequest: props, startTime, endTime };
   }
 
   async getNextRequest(counter: Counter, user: User) {
     const currentRequest = await this.getCurrentRequestByCounter(counter);
-    if (currentRequest) throw new BadRequestException(`La solicitud ${currentRequest.serviceRequest.code} aun esta en atencion`);
+    if (currentRequest)
+      throw new BadRequestException(`La solicitud ${currentRequest.serviceRequest.code} aun esta en atencion`);
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -113,7 +117,7 @@ export class AttentionService {
       user: user,
       startTime: new Date(),
     });
-    return await queryRunner.manager.save(Attention, createdAttention);
+    return await queryRunner.manager.save(createdAttention);
   }
 
   private async _handleTransactionError(error: unknown, queryRunner: QueryRunner) {
