@@ -10,4 +10,6 @@ export default () => ({
   },
   jwt_key: process.env.JWT_TOKEN,
   host: process.env.HOST,
+  email_username: process.env.EMAIL_USERNAME,
+  email_password: process.env.EMAIL_PASSWORD,
 });

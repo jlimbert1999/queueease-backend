@@ -9,6 +9,10 @@ export const MENU_FRONTEND = [
         icon: 'pi pi-list',
         items: [
           {
+            label: 'Preferencias',
+            routerLink: 'administration/preferences',
+          },
+          {
             label: 'Categorias',
             routerLink: 'administration/categories',
           },
@@ -27,10 +31,6 @@ export const MENU_FRONTEND = [
           {
             label: 'Usuarios',
             routerLink: 'administration/users',
-          },
-          {
-            label: 'Preferencias',
-            routerLink: 'administration/preferences',
           },
         ],
       },
