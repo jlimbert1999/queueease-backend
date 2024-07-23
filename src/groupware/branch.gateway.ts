@@ -28,4 +28,11 @@ export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { socketIds } = this.branchConnectionService.getBranch(branchId) ?? { socketIds: [] };
     this.server.to(socketIds).emit('announce', advertisement);
   }
+
+  announceVideo(branchIds: string[], url: string | null): void {
+    const branches = branchIds.map((id) => this.branchConnectionService.getBranch(id)).filter((branch) => !!branch);
+    branches.forEach((branch) => {
+      this.server.to(branch.socketIds).emit('announce-video', { url });
+    });
+  }
 }

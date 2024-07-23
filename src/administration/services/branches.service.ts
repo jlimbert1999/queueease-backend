@@ -157,7 +157,7 @@ export class BranchesService {
     };
   }
 
-  async announce({ url, branches }: AnnounceDto) {
+  async announceVideo({ url, branches }: AnnounceDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();

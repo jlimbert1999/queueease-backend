@@ -45,7 +45,9 @@ export class BranchController {
   }
 
   @Post('announce')
-  announce(@Body() body: AnnounceDto) {
-    return this.branchService.announce(body);
+  async announce(@Body() body: AnnounceDto) {
+    const branchIds = await this.branchService.announceVideo(body);
+    this.branchGateway.announceVideo(branchIds, body.url);
+    return { message: 'Sucursales actualizadas' };
   }
 }

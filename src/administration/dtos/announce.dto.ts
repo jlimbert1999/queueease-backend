@@ -4,7 +4,7 @@ export class AnnounceDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  url: string | null;
+  url?: string;
 
   @IsArray()
   @IsString({ each: true })
