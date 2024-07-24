@@ -4,7 +4,7 @@ import { PaginationParamsDto } from 'src/common/dtos';
 import { AnnounceDto, CreateBranchDto } from '../dtos';
 import { Protected } from 'src/auth/decorators';
 import { UserRole } from 'src/users/entities/user.entity';
-import { BranchGateway } from 'src/groupware/branch.gateway';
+import { BranchGateway } from 'src/groupware/gateways/branch.gateway';
 
 @Controller('branches')
 @Protected(UserRole.ADMIN)

@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
-import { GroupwareGateway } from 'src/groupware/groupware.gateway';
+import { GroupwareGateway } from 'src/groupware/gateways/groupware.gateway';
 import { BranchesService } from 'src/administration/services';
 import { Public } from 'src/auth/decorators';
 

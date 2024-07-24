@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
-import { GroupwareGateway } from 'src/groupware/groupware.gateway';
+import { GroupwareGateway } from 'src/groupware/gateways/groupware.gateway';
 import { onlyAssignedCounter } from '../decorators/only-assigned-counter.decorator';
 import { AttentionService } from '../services';
-import { BranchGateway } from 'src/groupware/branch.gateway';
 import { UpdateRequestServiceDto } from '../dtos';
 import { CounterRequest } from '../decorators/counter-request.decorator';
 import { Counter } from 'src/administration/entities';
 import { UserRequest } from 'src/auth/decorators';
 import { User } from 'src/users/entities/user.entity';
+import { BranchGateway } from 'src/groupware/gateways/branch.gateway';
 
 @onlyAssignedCounter()
 @Controller('attention')
@@ -31,7 +31,11 @@ export class AttentionController {
   @Get('next')
   async getNextRequest(@CounterRequest() counter: Counter, @UserRequest() user: User) {
     const request = await this.attentionService.getNextRequest(counter, user);
-    this.groupwareGateway.notifyRequestHandled(request.serviceRequest.branchId, request.serviceRequest.serviceId, request.serviceRequest.id);
+    this.groupwareGateway.notifyRequestHandled(
+      request.serviceRequest.branchId,
+      request.serviceRequest.serviceId,
+      request.serviceRequest.id,
+    );
     this.branchGateway.announceRequest(counter.branchId, {
       id: request.serviceRequest.id,
       code: request.serviceRequest.code,

@@ -1,6 +1,6 @@
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { BranchConnectionService } from './services';
+import { BranchConnectionService } from '../services';
 
 interface advertisement {
   id: string;

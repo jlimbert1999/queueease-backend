@@ -55,16 +55,6 @@ export class UserService {
     return this._removePasswordField(updatedUser);
   }
 
-  async searchForAssign(term: string) {
-    return await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.counter', 'counter')
-      .where('user.fullname ILIKE :term', { term: `%${term}%` })
-      .andWhere('counter IS NULL')
-      .take(5)
-      .getMany();
-  }
-
   private async _encryptPassword(password: string): Promise<string> {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);

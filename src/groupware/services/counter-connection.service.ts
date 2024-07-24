@@ -9,7 +9,7 @@ interface CounterSocket {
 }
 
 @Injectable()
-export class GroupwareService {
+export class CounterConnectionService {
   private counters: Record<string, CounterSocket> = {};
 
   onCounterConnected(id_socket: string, counter: counterPayload): void {

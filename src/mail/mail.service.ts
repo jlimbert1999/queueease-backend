@@ -4,6 +4,11 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Pdf } from 'src/helpers';
 
+// interface userCrendentials {
+//   login: string;
+//   password: string;
+//   email: string;
+// }
 @Injectable()
 export class MailService {
   constructor(private readonly mailerService: MailerService) {}

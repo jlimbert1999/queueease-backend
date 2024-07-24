@@ -21,11 +21,6 @@ export class UserController {
     return this.userService.search(term, params);
   }
 
-  @Get('search/assign/:term')
-  searchForAssign(@Param('term') term: string) {
-    return this.userService.searchForAssign(term);
-  }
-
   @Post()
   create(@Body() userDto: CreateUserDto) {
     return this.userService.create(userDto);
