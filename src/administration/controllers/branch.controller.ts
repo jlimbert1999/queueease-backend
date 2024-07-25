@@ -19,11 +19,6 @@ export class BranchController {
     return this.branchService.findAll(params);
   }
 
-  @Get('search/:term')
-  search(@Param('term') term: string, @Query() params: PaginationParamsDto) {
-    return this.branchService.search(term, params);
-  }
-
   @Post()
   create(@Body() category: CreateBranchDto) {
     return this.branchService.create(category);

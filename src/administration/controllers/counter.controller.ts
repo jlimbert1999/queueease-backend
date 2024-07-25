@@ -17,11 +17,6 @@ export class CounterController {
     return this.serviceDeskService.findAll(params);
   }
 
-  @Get('search/:term')
-  search(@Param('term') term: string, @Query() params: PaginationParamsDto) {
-    return this.serviceDeskService.search(term, params);
-  }
-
   @Post()
   create(@Body() counter: CreateCounterDto) {
     return this.serviceDeskService.create(counter);

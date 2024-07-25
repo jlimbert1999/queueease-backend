@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 
@@ -15,3 +16,5 @@ export class CreatePreferenceDto {
   @Min(0)
   priority: number;
 }
+
+export class UpdatePreferenceDto extends PartialType(CreatePreferenceDto) {}

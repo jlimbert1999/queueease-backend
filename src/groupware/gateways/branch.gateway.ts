@@ -8,7 +8,12 @@ interface advertisement {
   counterNumber: number;
 }
 
-@WebSocketGateway({ namespace: 'branches' })
+@WebSocketGateway({
+  namespace: 'branches',
+  cors: {
+    origin: '*',
+  },
+})
 export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   constructor(private branchConnectionService: BranchConnectionService) {}

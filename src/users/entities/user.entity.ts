@@ -28,10 +28,12 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ nullable: true })
+  email: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @OneToMany(() => Attention, (attention) => attention.user, { cascade: true })
   attentions: Attention[];
-  
 }

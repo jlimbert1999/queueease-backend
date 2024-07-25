@@ -18,11 +18,6 @@ export class ServicesController {
     return this.servicesService.findAll(params);
   }
 
-  @Get('search/:term')
-  search(@Param('term') term: string, @Query() params: PaginationParamsDto) {
-    return this.servicesService.search(term, params);
-  }
-
   @Post()
   create(@Body() category: CreateServiceDto) {
     return this.servicesService.create(category);

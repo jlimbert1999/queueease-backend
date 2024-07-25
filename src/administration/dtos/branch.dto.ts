@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateBranchDto {
@@ -22,3 +23,5 @@ export class CreateBranchDto {
   @IsOptional()
   alertVideoUrl?: string;
 }
+
+export class UpdateBranchDto extends PartialType(CreateBranchDto) {}

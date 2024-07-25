@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
-import { CreateServiceDto, UpdateServiceDto } from '../dtos';
+
 import { PaginationParamsDto } from 'src/common/dtos';
+import { CreateServiceDto, UpdateServiceDto } from '../dtos';
 import { Category, Service } from '../entities';
 
 @Injectable()
@@ -12,28 +13,14 @@ export class ServiceService {
     @InjectRepository(Category) private categoryRepository: Repository<Category>,
   ) {}
 
-  async findAll({ limit, offset }: PaginationParamsDto) {
+  async findAll({ limit, offset, term }: PaginationParamsDto) {
     const [services, length] = await this.serviceRepository.findAndCount({
       take: limit,
       skip: offset,
       relations: {
         category: true,
       },
-      order: {
-        createdAt: 'DESC',
-      },
-    });
-    return { services, length };
-  }
-
-  async search(term: string, { limit, offset }: PaginationParamsDto) {
-    const [services, length] = await this.serviceRepository.findAndCount({
-      where: [{ name: ILike(`%${term}%`) }, { code: ILike(`%${term}%`) }],
-      take: limit,
-      skip: offset,
-      relations: {
-        category: true,
-      },
+      ...(term && { where: { name: ILike(`%${term}%`) } }),
     });
     return { services, length };
   }
@@ -41,10 +28,7 @@ export class ServiceService {
   async create(createServiceDto: CreateServiceDto) {
     const { category, ...props } = createServiceDto;
     await this._checkDuplicateCode(props.code);
-    let categoryDB: Category | null = null;
-    if (category) {
-      categoryDB = await this.categoryRepository.findOne({ where: { id: category } });
-    }
+    const categoryDB = category ? await this.categoryRepository.findOne({ where: { id: category } }) : null;
     const newService = this.serviceRepository.create({
       ...props,
       category: categoryDB,
@@ -54,14 +38,11 @@ export class ServiceService {
 
   async update(id: string, updateServiceDto: UpdateServiceDto) {
     const { category, ...toUpdate } = updateServiceDto;
-    const serviceDB = await this.serviceRepository.findOneBy({ id });
+    const serviceDB = await this.serviceRepository.preload({ id, ...toUpdate });
     if (!serviceDB) throw new NotFoundException(`El servicio editado no existe`);
     if (serviceDB.code !== toUpdate.code) await this._checkDuplicateCode(toUpdate.code);
-    let categoryDB: Category | null = null;
-    if (category) {
-      categoryDB = await this.categoryRepository.findOne({ where: { id: category } });
-    }
-    return await this.serviceRepository.save({ id, ...toUpdate, category: categoryDB });
+    const categoryDB = category ? await this.categoryRepository.findOne({ where: { id: category } }) : null;
+    return await this.serviceRepository.save({ ...serviceDB, category: categoryDB });
   }
 
   async searchAvailables(term: string) {

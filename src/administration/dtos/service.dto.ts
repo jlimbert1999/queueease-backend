@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateServiceDto {
@@ -13,3 +14,5 @@ export class CreateServiceDto {
   @IsOptional()
   category?: string;
 }
+
+export class UpdateServiceDto extends PartialType(CreateServiceDto) {}

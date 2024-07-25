@@ -6,14 +6,10 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { CreateUserDto, UpdateUserDto } from './dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
-import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(User) private userRepository: Repository<User>,
-    private mailService: MailService,
-  ) {}
+  constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
 
   async findAll({ limit, offset, term }: PaginationParamsDto) {
     const [users, length] = await this.userRepository.findAndCount({
@@ -29,7 +25,6 @@ export class UserService {
     return { users: users.map((user) => this._removePasswordField(user)), length };
   }
 
-
   async create({ password, ...props }: CreateUserDto) {
     await this._checkDuplicateLogin(props.login);
     const encryptedPassword = await this._encryptPassword(password);
@@ -44,7 +39,6 @@ export class UserService {
     if (user.login !== userDB.login) await this._checkDuplicateLogin(user.login);
     if (user.password) user['password'] = await this._encryptPassword(user.password);
     const updatedUser = await this.userRepository.save({ id, ...user });
-    await this.mailService.notifyUser(user.login, user.password);
     return this._removePasswordField(updatedUser);
   }
 

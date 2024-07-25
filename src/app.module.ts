@@ -11,7 +11,6 @@ import { UserModule } from './users/user.module';
 import { GroupwareModule } from './groupware/groupware.module';
 import { TicketingModule } from './ticketing/ticketing.module';
 import { FilesModule } from './files/files.module';
-import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -39,7 +38,6 @@ import { MailModule } from './mail/mail.module';
     TicketingModule,
     AdministrationModule,
     FilesModule,
-    MailModule,
   ],
   controllers: [],
   providers: [Logger],

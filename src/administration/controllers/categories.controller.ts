@@ -16,11 +16,6 @@ export class CategoriesController {
     return this.categoriesService.findAll(params);
   }
 
-  @Get('search/:term')
-  search(@Param('term') term: string, @Query() params: PaginationParamsDto) {
-    return this.categoriesService.search(term, params);
-  }
-
   @Post()
   create(@Body() category: CreateCategoryDto) {
     return this.categoriesService.create(category);

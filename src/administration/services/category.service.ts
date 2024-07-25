@@ -9,38 +9,24 @@ import { PaginationParamsDto } from 'src/common/dtos';
 export class CategoryService {
   constructor(@InjectRepository(Category) private categoryRepository: Repository<Category>) {}
 
+  async findAll({ limit, offset, term }: PaginationParamsDto) {
+    const [categories, length] = await this.categoryRepository.findAndCount({
+      take: limit,
+      skip: offset,
+      ...(term && { where: { name: ILike(`%${term}%`) } }),
+    });
+    return { categories, length };
+  }
+
   async create(categoryDto: CreateCategoryDto) {
     const category = this.categoryRepository.create(categoryDto);
     return await this.categoryRepository.save(category);
   }
 
   async update(id: string, categoryDto: UpdateCategoryDto) {
-    const categoryDB = await this.categoryRepository.findOneBy({ id });
+    const categoryDB = await this.categoryRepository.preload({ id, ...categoryDto });
     if (!categoryDB) throw new BadRequestException(`La categoria editada no existe`);
-    return await this.categoryRepository.save({ id, ...categoryDto });
-  }
-
-  async findAll({ limit, offset }: PaginationParamsDto) {
-    const [categories, length] = await this.categoryRepository.findAndCount({
-      take: limit,
-      skip: offset,
-      order: {
-        id: 'ASC',
-      },
-    });
-    return { categories, length };
-  }
-
-  async search(term: string, { limit, offset }: PaginationParamsDto) {
-    const [categories, length] = await this.categoryRepository.findAndCount({
-      where: { name: ILike(`%${term}%`) },
-      take: limit,
-      skip: offset,
-      order: {
-        id: 'ASC',
-      },
-    });
-    return { categories, length };
+    return await this.categoryRepository.save(categoryDB);
   }
 
   async getAvailables() {

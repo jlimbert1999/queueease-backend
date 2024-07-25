@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Body,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Controller, Body, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { PreferenceService } from '../services';
 import { PaginationParamsDto } from 'src/common/dtos';
 import { CreatePreferenceDto } from '../dtos';
@@ -18,11 +10,6 @@ export class PreferenceController {
   @Get()
   findAll(@Query() params: PaginationParamsDto) {
     return this.preferenceService.findAll(params);
-  }
-
-  @Get('search/:term')
-  search(@Param('term') term: string, @Query() params: PaginationParamsDto) {
-    return this.preferenceService.search(term, params);
   }
 
   @Post()

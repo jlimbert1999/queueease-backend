@@ -1,3 +1,4 @@
+import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { IsString, IsPositive, IsInt, Min, IsArray, IsUUID, IsNotEmpty } from 'class-validator';
 
@@ -19,3 +20,5 @@ export class CreateCounterDto {
   @IsString({ each: true })
   services: string[];
 }
+
+export class UpdateCounterDto extends PartialType(OmitType(CreateCounterDto, ['branch'] as const)) {}

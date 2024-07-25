@@ -13,19 +13,11 @@ export class PreferenceService {
     private preferenceRepository: Repository<Preference>,
   ) {}
 
-  async findAll({ limit, offset }: PaginationParamsDto) {
+  async findAll({ limit, offset, term }: PaginationParamsDto) {
     const [preferences, length] = await this.preferenceRepository.findAndCount({
       take: limit,
       skip: offset,
-    });
-    return { preferences, length };
-  }
-
-  async search(term: string, { limit, offset }: PaginationParamsDto) {
-    const [preferences, length] = await this.preferenceRepository.findAndCount({
-      where: { name: ILike(`%${term}%`) },
-      take: limit,
-      skip: offset,
+      ...(term && { where: { name: ILike(`%${term}%`) } }),
     });
     return { preferences, length };
   }
@@ -40,9 +32,7 @@ export class PreferenceService {
       id,
       ...categoryDto,
     });
-    if (!preferenceDB)
-      throw new NotFoundException(`La categoria editada no existe`);
+    if (!preferenceDB) throw new NotFoundException(`La categoria editada no existe`);
     return await this.preferenceRepository.save(preferenceDB);
   }
-
 }

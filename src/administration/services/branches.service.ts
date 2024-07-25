@@ -14,24 +14,19 @@ export class BranchesService {
   constructor(
     @InjectRepository(Branch) private branchRepository: Repository<Branch>,
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
-    @InjectRepository(BranchVideo)
-    private branchVideoRepository: Repository<BranchVideo>,
-    @InjectRepository(Preference)
-    private preferenceRepository: Repository<Preference>,
+    @InjectRepository(BranchVideo) private branchVideoRepository: Repository<BranchVideo>,
+    @InjectRepository(Preference) private preferenceRepository: Repository<Preference>,
     private configService: ConfigService,
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAll({ limit, offset }: PaginationParamsDto) {
+  async findAll({ limit, offset, term }: PaginationParamsDto) {
     const [branches, length] = await this.branchRepository.findAndCount({
       take: limit,
       skip: offset,
       relations: { services: true, videos: true },
-      select: {
-        services: { id: true, name: true },
-      },
+      ...(term && { where: { name: ILike(`%${term}%`) } }),
     });
-
     return {
       branches: branches.map(({ videos, ...props }) => ({
         videos: this._generatePlaylist(videos),
@@ -41,29 +36,9 @@ export class BranchesService {
     };
   }
 
-  async search(term: string, { limit, offset }: PaginationParamsDto) {
-    const [branches, length] = await this.branchRepository.findAndCount({
-      where: {
-        name: ILike(`%${term}%`),
-      },
-      relations: { services: true, videos: true },
-      select: {
-        services: {
-          id: true,
-          name: true,
-        },
-      },
-      take: limit,
-      skip: offset,
-    });
-    return { branches, length };
-  }
-
   async create(branchDto: CreateBranchDto) {
     const { services, videos, ...props } = branchDto;
-    const serviceDB = await this.serviceRepository.find({
-      where: { id: In(services) },
-    });
+    const serviceDB = await this.serviceRepository.find({ where: { id: In(services) } });
     const branch = this.branchRepository.create({
       ...props,
       services: serviceDB,
