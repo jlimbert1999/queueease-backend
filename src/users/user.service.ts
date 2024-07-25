@@ -15,10 +15,13 @@ export class UserService {
     private mailService: MailService,
   ) {}
 
-  async findAll({ limit, offset }: PaginationParamsDto) {
+  async findAll({ limit, offset, term }: PaginationParamsDto) {
     const [users, length] = await this.userRepository.findAndCount({
       take: limit,
       skip: offset,
+      ...(term && {
+        where: { fullname: ILike(`%${term}%`) },
+      }),
       order: {
         createdAt: 'DESC',
       },
@@ -26,16 +29,6 @@ export class UserService {
     return { users: users.map((user) => this._removePasswordField(user)), length };
   }
 
-  async search(term: string, { limit, offset }: PaginationParamsDto) {
-    const [users, length] = await this.userRepository.findAndCount({
-      where: {
-        fullname: ILike(`%${term}%`),
-      },
-      take: limit,
-      skip: offset,
-    });
-    return { users: users.map((user) => this._removePasswordField(user)), length };
-  }
 
   async create({ password, ...props }: CreateUserDto) {
     await this._checkDuplicateLogin(props.login);
