@@ -1,3 +1,4 @@
+import { ReportModule } from './modules/report/report.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Logger, Module } from '@nestjs/common';
@@ -5,15 +6,16 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
 import configuration from './config/configuration';
-import { AdministrationModule } from './administration/administration.module';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './users/user.module';
-import { GroupwareModule } from './groupware/groupware.module';
-import { TicketingModule } from './ticketing/ticketing.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/users/user.module';
+import { GroupwareModule } from './modules/groupware/groupware.module';
+import { TicketingModule } from './modules/ticketing/ticketing.module';
 import { FilesModule } from './files/files.module';
+import { AdministrationModule } from './modules/administration/administration.module';
 
 @Module({
   imports: [
+    ReportModule,
     ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

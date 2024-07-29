@@ -4,10 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { diskStorage } from 'multer';
 import { Response } from 'express';
 
-import { Protected, Public } from 'src/auth/decorators';
+import { Protected, Public } from 'src/modules/auth/decorators';
 import { fileNamer } from './helpers/file_namer.helper';
 import { fileFilter } from './helpers/file_filter.helper';
-import { UserRole } from 'src/users/entities/user.entity';
+import { UserRole } from 'src/modules/users/entities/user.entity';
 import { FilesService } from './files.service';
 
 @Controller('files')
