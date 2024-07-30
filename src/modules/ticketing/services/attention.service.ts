@@ -2,10 +2,11 @@ import { BadRequestException, HttpException, Injectable, InternalServerErrorExce
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, QueryRunner, Repository } from 'typeorm';
 
-import { Attention, RequestStatus, ServiceRequest } from '../entities';
-import { User } from 'src/modules/users/entities/user.entity';
-import { UpdateRequestServiceDto } from '../dtos';
 import { Counter } from 'src/modules/administration/entities';
+import { User } from 'src/modules/users/entities';
+
+import { Attention, RequestStatus, ServiceRequest } from '../entities';
+import { UpdateRequestServiceDto } from '../dtos';
 
 interface attentionProps {
   user: User;

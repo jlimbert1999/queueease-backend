@@ -1,17 +1,17 @@
 import { ReportModule } from './modules/report/report.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Logger, Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
 import configuration from './config/configuration';
-import { AuthModule } from './modules/auth/auth.module';
-import { UserModule } from './modules/users/user.module';
+import { AdministrationModule } from './modules/administration/administration.module';
 import { GroupwareModule } from './modules/groupware/groupware.module';
 import { TicketingModule } from './modules/ticketing/ticketing.module';
-import { FilesModule } from './files/files.module';
-import { AdministrationModule } from './modules/administration/administration.module';
+import { FilesModule } from './modules/files/files.module';
+import { UserModule } from './modules/users/user.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [

@@ -47,13 +47,14 @@ export class ReportService {
   }
 
   async getWorkDetails(user: User, date?: string) {
-    const filterDate = date ? new Date(date) : new Date();
-    filterDate.setHours(0, 0, 0, 0);
+    const startDate = date ? new Date(date) : new Date();
+    startDate.setHours(0, 0, 0, 0);
     const result: reportWork[] = await this.attentionRepository
       .createQueryBuilder('attention')
       .where('attention.user = :id', { id: user.id })
       .leftJoinAndSelect('attention.request', 'request')
-      .where('DATE(request.createdAt) >= :date', { date: filterDate })
+      .where('DATE(request.createdAt) >= :start', { start: startDate })
+      // .andWhere('DATE(request.createdAt) <= :end', { end: endDate })
       .leftJoinAndSelect('request.service', 'service')
       .select('service.name', 'serviceName')
       .addSelect('request.status', 'status')
