@@ -23,6 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const { id_user } = payload;
     const userDB = await this.userRepository.findOne({ where: { id: id_user } });
     if (!userDB) throw new UnauthorizedException('Token invalido, vuelva a iniciar sesion');
+    if (!userDB.isActive) throw new UnauthorizedException('El usuario ha sido deshabilitado');
     delete userDB.password;
     return userDB;
   }

@@ -2,12 +2,11 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, ILike, In, Repository } from 'typeorm';
-import * as path from 'path';
-import * as fs from 'fs';
 
 import { Branch, BranchVideo, Preference, Service } from '../entities';
 import { AnnounceDto, CreateBranchDto, UpdateBranchDto } from '../dtos';
 import { PaginationParamsDto } from 'src/common/dtos';
+import { FilesService } from 'src/modules/files/files.service';
 
 @Injectable()
 export class BranchesService {
@@ -16,8 +15,9 @@ export class BranchesService {
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
     @InjectRepository(BranchVideo) private branchVideoRepository: Repository<BranchVideo>,
     @InjectRepository(Preference) private preferenceRepository: Repository<Preference>,
-    private configService: ConfigService,
     private readonly dataSource: DataSource,
+    private configService: ConfigService,
+    private fileService: FilesService,
   ) {}
 
   async findAll({ limit, offset, term }: PaginationParamsDto) {
@@ -44,50 +44,47 @@ export class BranchesService {
       services: serviceDB,
       videos: videos.map((video) => this.branchVideoRepository.create({ url: video })),
     });
+    this.fileService.saveFiles(videos, 'branches');
     return await this.branchRepository.save(branch);
   }
 
   async update(id: string, branchDto: UpdateBranchDto) {
-    const { services, videos, ...props } = branchDto;
+    const { videos, services = [], ...props } = branchDto;
     const branchDB = await this.branchRepository.findOne({
       where: { id },
-      relations: { videos: true },
+      relations: { videos: true, services: true },
     });
     if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
-    const updatedServices = await this.serviceRepository.find({
-      where: { id: In(services) },
-    });
-    let deletedVideos = branchDB.videos;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      if (videos.length > 0) {
+      if (videos) {
         await queryRunner.manager.delete(BranchVideo, { branch: { id } });
+        this._removeUnusedVideos(branchDB.videos, videos);
         branchDB.videos = videos.map((video) => this.branchVideoRepository.create({ url: video }));
-      } else {
-        deletedVideos = [];
       }
-      const toUpdate = this.branchRepository.merge(branchDB, {
-        ...props,
-        ...(updatedServices.length > 0 && { services: updatedServices }),
-      });
+      if (services.length > 0) {
+        branchDB.services = await queryRunner.manager.find(Service, {
+          where: { id: In(services) },
+        });
+      }
+      const toUpdate = this.branchRepository.merge(branchDB, props);
       await queryRunner.manager.save(toUpdate);
       await queryRunner.commitTransaction();
-      this._deleteVideosBranch(deletedVideos.map((el) => el.url));
       const updatedBranch = await this.branchRepository.findOne({
         where: { id },
         relations: { services: true, videos: true },
       });
+      this.fileService.saveFiles(videos, 'branches');
       return {
         ...updatedBranch,
         videos: this._generatePlaylist(updatedBranch.videos),
       };
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      this._deleteVideosBranch(videos);
       throw new InternalServerErrorException('Error al actualizar sucursal');
     } finally {
       await queryRunner.release();
@@ -176,10 +173,15 @@ export class BranchesService {
     });
   }
 
-  private _deleteVideosBranch(fileNames: string[]): void {
-    for (const file of fileNames) {
-      const filePath = path.join(process.cwd(), 'static', 'branches', file);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  private async _removeUnusedVideos(currentVideos: BranchVideo[], newVideos: string[]) {
+    const filesToDelete: string[] = [];
+    for (const video of currentVideos) {
+      const exist = newVideos.find((el) => el === video.url);
+      if (!exist) {
+        filesToDelete.push(video.url);
+      }
     }
+    console.log('files to delete', filesToDelete);
+    this.fileService.removeFile(filesToDelete, 'branches');
   }
 }

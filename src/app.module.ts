@@ -1,6 +1,7 @@
 import { ReportModule } from './modules/report/report.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Logger, Module } from '@nestjs/common';
 import { join } from 'path';
@@ -15,8 +16,8 @@ import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
-    ReportModule,
     ConfigModule.forRoot({ load: [configuration], isGlobal: true }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -40,6 +41,7 @@ import { AuthModule } from './modules/auth/auth.module';
     TicketingModule,
     AdministrationModule,
     FilesModule,
+    ReportModule,
   ],
   controllers: [],
   providers: [Logger],

@@ -25,7 +25,7 @@ export class FilesController {
         fileSize: 2 * 1024 * 1024 * 1024,
       },
       storage: diskStorage({
-        destination: './static/branches',
+        destination: './static/temp',
         filename: fileNamer,
       }),
     }),

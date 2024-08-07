@@ -22,6 +22,7 @@ export class AuthService {
     if (!bcrypt.compareSync(password, userDB.password)) {
       throw new BadRequestException('Usuario o Contraseña incorrectos');
     }
+    if (!userDB.isActive) throw new BadRequestException('El usuario ha sido deshabilitado');
     return {
       token: this._generateToken(userDB),
       redirectTo: this._generateRoute(userDB),

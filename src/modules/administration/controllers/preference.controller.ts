@@ -3,7 +3,11 @@ import { PreferenceService } from '../services';
 import { PaginationParamsDto } from 'src/common/dtos';
 import { CreatePreferenceDto } from '../dtos';
 
+import { Protected } from 'src/modules/auth/decorators';
+import { UserRole } from 'src/modules/users/entities';
+
 @Controller('preferences')
+@Protected(UserRole.ADMIN)
 export class PreferenceController {
   constructor(private preferenceService: PreferenceService) {}
 

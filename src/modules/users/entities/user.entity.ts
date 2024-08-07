@@ -28,11 +28,11 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ nullable: true })
-  email: string | null;
-
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
 
   @OneToMany(() => Attention, (attention) => attention.user, { cascade: true })
   attentions: Attention[];
