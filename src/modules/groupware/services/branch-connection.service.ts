@@ -9,20 +9,20 @@ interface branch {
 export class BranchConnectionService {
   private branches: Record<string, BranchSocket> = {};
 
-  onBranchConnected(id_socket: string, branch: branch) {
+  onBranchConnected(socketId: string, branch: branch) {
     if (this.branches[branch.id]) {
-      return this.branches[branch.id].socketIds.push(id_socket);
+      return this.branches[branch.id].socketIds.push(socketId);
     }
     this.branches[branch.id] = {
       ...branch,
-      socketIds: [id_socket],
+      socketIds: [socketId],
     };
   }
 
-  onBranchDisconnected(id_socket: string) {
-    const branch = this.getBranches().find(({ socketIds }) => socketIds.includes(id_socket));
+  onBranchDisconnected(socketId: string) {
+    const branch = this.getBranches().find(({ socketIds }) => socketIds.includes(socketId));
     if (!branch) return;
-    const connectedSockets = branch.socketIds.filter((id) => id !== id_socket);
+    const connectedSockets = branch.socketIds.filter((id) => id !== socketId);
     if (connectedSockets.length === 0) return delete this.branches[branch.id];
     this.branches[branch.id].socketIds = connectedSockets;
   }

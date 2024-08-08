@@ -25,8 +25,10 @@ export class BranchController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() category: CreateBranchDto) {
-    return this.branchService.update(id, category);
+  async update(@Param('id') id: string, @Body() category: CreateBranchDto) {
+    const branch = await this.branchService.update(id, category);
+    this.branchGateway.setBranchConfig(branch.id, { videos: branch.videos, message: branch.alertVideoUrl });
+    return branch;
   }
 
   @Get('availables')

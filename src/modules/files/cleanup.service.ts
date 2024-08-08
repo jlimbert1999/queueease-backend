@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { existsSync } from 'fs';
 
-import { existsSync, readdirSync, unlinkSync } from 'fs';
+import { readdir, unlink } from 'fs/promises';
 import { join } from 'path';
 
 @Injectable()
@@ -9,14 +10,14 @@ export class CleanupService {
   private readonly tempDir = join(__dirname, '..', '..', '..', 'static', 'temp');
 
   @Cron('0 2 * * *')
-  async cleanupTempFolder() {
+  async _cleanTempFolder(): Promise<void> {
     if (!existsSync(this.tempDir)) {
       return Logger.error(`Error clean uploaded temp files, ${this.tempDir} don't exist`);
     }
-    const files = readdirSync(this.tempDir);
-    files.forEach((file) => {
+    const files = await readdir(this.tempDir);
+    for (const file of files) {
       const filePath = join(this.tempDir, file);
-      unlinkSync(filePath);
-    });
+      await unlink(filePath);
+    }
   }
 }

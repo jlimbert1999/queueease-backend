@@ -8,6 +8,11 @@ interface advertisement {
   counterNumber: number;
 }
 
+interface branchConfigProps {
+  videos: string[];
+  message: string;
+}
+
 @WebSocketGateway({
   namespace: 'branches',
   cors: {
@@ -20,9 +25,9 @@ export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: Socket) {
     const data = client.handshake.auth['branch'];
-    const [error, brach] = this.branchConnectionService.checkBranchIsValid(data);
+    const [error, branch] = this.branchConnectionService.checkBranchIsValid(data);
     if (error) return client.disconnect();
-    this.branchConnectionService.onBranchConnected(client.id, brach);
+    this.branchConnectionService.onBranchConnected(client.id, branch);
   }
 
   handleDisconnect(client: Socket) {
@@ -39,5 +44,10 @@ export class BranchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     branches.forEach((branch) => {
       this.server.to(branch.socketIds).emit('announce-video', { url });
     });
+  }
+
+  setBranchConfig(branchId: string, config: Partial<branchConfigProps>): void {
+    const { socketIds } = this.branchConnectionService.getBranch(branchId) ?? { socketIds: [] };
+    this.server.to(socketIds).emit('set-config', config);
   }
 }

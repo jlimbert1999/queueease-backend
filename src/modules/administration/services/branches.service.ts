@@ -44,17 +44,19 @@ export class BranchesService {
       services: serviceDB,
       videos: videos.map((video) => this.branchVideoRepository.create({ url: video })),
     });
+    const createdBranch = await this.branchRepository.save(branch);
     this.fileService.saveFiles(videos, 'branches');
-    return await this.branchRepository.save(branch);
+    return this._plainBranch(createdBranch);
   }
 
   async update(id: string, branchDto: UpdateBranchDto) {
-    const { videos, services = [], ...props } = branchDto;
+    const { videos, services, ...props } = branchDto;
     const branchDB = await this.branchRepository.findOne({
       where: { id },
       relations: { videos: true, services: true },
     });
-    if (!branchDB) throw new NotFoundException(`La sucursal editada no existe`);
+    if (!branchDB) throw new NotFoundException(`La sucursal ${id} no existe`);
+    let videosToDelete: string[] = [];
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -63,26 +65,20 @@ export class BranchesService {
     try {
       if (videos) {
         await queryRunner.manager.delete(BranchVideo, { branch: { id } });
-        this._removeUnusedVideos(branchDB.videos, videos);
+        videosToDelete = branchDB.videos.filter(({ url }) => !videos.includes(url)).map(({ url }) => url);
         branchDB.videos = videos.map((video) => this.branchVideoRepository.create({ url: video }));
       }
-      if (services.length > 0) {
+      if (services) {
         branchDB.services = await queryRunner.manager.find(Service, {
           where: { id: In(services) },
         });
       }
-      const toUpdate = this.branchRepository.merge(branchDB, props);
-      await queryRunner.manager.save(toUpdate);
+      const updatedBranch = this.branchRepository.merge(branchDB, props);
+      await queryRunner.manager.save(updatedBranch);
       await queryRunner.commitTransaction();
-      const updatedBranch = await this.branchRepository.findOne({
-        where: { id },
-        relations: { services: true, videos: true },
-      });
+      this.fileService.deleteFiles(videosToDelete, 'branches');
       this.fileService.saveFiles(videos, 'branches');
-      return {
-        ...updatedBranch,
-        videos: this._generatePlaylist(updatedBranch.videos),
-      };
+      return this._plainBranch(updatedBranch);
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException('Error al actualizar sucursal');
@@ -173,15 +169,7 @@ export class BranchesService {
     });
   }
 
-  private async _removeUnusedVideos(currentVideos: BranchVideo[], newVideos: string[]) {
-    const filesToDelete: string[] = [];
-    for (const video of currentVideos) {
-      const exist = newVideos.find((el) => el === video.url);
-      if (!exist) {
-        filesToDelete.push(video.url);
-      }
-    }
-    console.log('files to delete', filesToDelete);
-    this.fileService.removeFile(filesToDelete, 'branches');
+  private async _plainBranch({ videos, ...props }: Branch) {
+    return { ...props, videos: this._generatePlaylist(videos) };
   }
 }
