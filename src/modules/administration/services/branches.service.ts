@@ -83,6 +83,7 @@ export class BranchesService {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException('Error al actualizar sucursal');
     } finally {
+      console.log('object');
       await queryRunner.release();
     }
   }

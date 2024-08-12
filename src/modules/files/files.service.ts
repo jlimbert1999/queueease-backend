@@ -6,7 +6,7 @@ import { join } from 'path';
 type ValidFolder = 'branches';
 @Injectable()
 export class FilesService {
-  
+
   getStaticBranchVideo(imageName: string) {
     const path = join(__dirname, '../../../static/branches', imageName);
     if (!existsSync(path)) throw new BadRequestException(`No branch found with image ${imageName}`);
@@ -30,7 +30,11 @@ export class FilesService {
 
     for (const file of files) {
       const filePath = join(tempDir, file);
-      if (!existsSync(filePath)) return;
+      console.log(filePath);
+      if (!existsSync(filePath)) {
+        console.log('file temp dont exist');
+        return
+      };
       unlinkSync(filePath);
     }
   }

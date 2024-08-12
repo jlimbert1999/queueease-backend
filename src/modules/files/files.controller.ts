@@ -4,25 +4,26 @@ import { ConfigService } from '@nestjs/config';
 import { diskStorage } from 'multer';
 import { Response } from 'express';
 
-import { Protected, Public } from 'src/modules/auth/decorators';
-import { fileNamer } from './helpers/file_namer.helper';
-import { fileFilter } from './helpers/file_filter.helper';
 import { UserRole } from 'src/modules/users/entities/user.entity';
+import { Protected, Public } from 'src/modules/auth/decorators';
+import { fileFilter, fileNamer } from './helpers';
 import { FilesService } from './files.service';
 
+const MAX_FILE_SIZE: number = 2 * 1024 * 1024 * 1024;
 @Controller('files')
 export class FilesController {
   constructor(
     private configService: ConfigService,
     private fileService: FilesService,
   ) {}
+
   @Protected(UserRole.ADMIN)
   @Post('branch')
   @UseInterceptors(
     FilesInterceptor('files', null, {
       fileFilter: fileFilter,
       limits: {
-        fileSize: 2 * 1024 * 1024 * 1024,
+        fileSize: MAX_FILE_SIZE,
       },
       storage: diskStorage({
         destination: './static/temp',
