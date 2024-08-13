@@ -1,6 +1,5 @@
 import { Controller, Get, Param, Post, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ConfigService } from '@nestjs/config';
 import { diskStorage } from 'multer';
 import { Response } from 'express';
 
@@ -12,10 +11,7 @@ import { FilesService } from './files.service';
 const MAX_FILE_SIZE: number = 2 * 1024 * 1024 * 1024;
 @Controller('files')
 export class FilesController {
-  constructor(
-    private configService: ConfigService,
-    private fileService: FilesService,
-  ) {}
+  constructor(private fileService: FilesService) {}
 
   @Protected(UserRole.ADMIN)
   @Post('branch')
@@ -36,7 +32,7 @@ export class FilesController {
   }
 
   @Public()
-  @Get('branch/:imageName')
+  @Get('branches/:imageName')
   findBranchVideo(@Res() res: Response, @Param('imageName') imageName: string) {
     const path = this.fileService.getStaticBranchVideo(imageName);
     res.sendFile(path);

@@ -28,20 +28,16 @@ export class BranchesService {
       ...(term && { where: { name: ILike(`%${term}%`) } }),
     });
     return {
-      branches: branches.map(({ videos, ...props }) => ({
-        videos: this._generatePlaylist(videos),
-        ...props,
-      })),
+      branches: branches.map((branch) => this._plainBranch(branch)),
       length,
     };
   }
 
   async create(branchDto: CreateBranchDto) {
     const { services, videos, ...props } = branchDto;
-    const serviceDB = await this.serviceRepository.find({ where: { id: In(services) } });
     const branch = this.branchRepository.create({
       ...props,
-      services: serviceDB,
+      services: await this.serviceRepository.find({ where: { id: In(services) } }),
       videos: videos.map((video) => this.branchVideoRepository.create({ url: video })),
     });
     const createdBranch = await this.branchRepository.save(branch);
@@ -51,39 +47,40 @@ export class BranchesService {
 
   async update(id: string, branchDto: UpdateBranchDto) {
     const { videos, services, ...props } = branchDto;
-    const branchDB = await this.branchRepository.findOne({
+    const branchDb = await this.branchRepository.findOne({
       where: { id },
       relations: { videos: true, services: true },
     });
-    if (!branchDB) throw new NotFoundException(`La sucursal ${id} no existe`);
+    if (!branchDb) throw new NotFoundException(`La sucursal ${id} no existe`);
     let videosToDelete: string[] = [];
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
     try {
       if (videos) {
+        // Replace videos with new videos
         await queryRunner.manager.delete(BranchVideo, { branch: { id } });
-        videosToDelete = branchDB.videos.filter(({ url }) => !videos.includes(url)).map(({ url }) => url);
-        branchDB.videos = videos.map((video) => this.branchVideoRepository.create({ url: video }));
+        videosToDelete = branchDb.videos.filter(({ url }) => !videos.includes(url)).map(({ url }) => url);
+        branchDb.videos = videos.map((video) => this.branchVideoRepository.create({ url: video }));
       }
       if (services) {
-        branchDB.services = await queryRunner.manager.find(Service, {
+        branchDb.services = await queryRunner.manager.find(Service, {
           where: { id: In(services) },
         });
       }
-      const updatedBranch = this.branchRepository.merge(branchDB, props);
+      const updatedBranch = this.branchRepository.merge(branchDb, props);
       await queryRunner.manager.save(updatedBranch);
       await queryRunner.commitTransaction();
       this.fileService.deleteFiles(videosToDelete, 'branches');
-      this.fileService.saveFiles(videos, 'branches');
+
+      // move temp files to folder
+      this.fileService.saveFiles(videos ?? [], 'branches');
       return this._plainBranch(updatedBranch);
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException('Error al actualizar sucursal');
     } finally {
-      console.log('object');
       await queryRunner.release();
     }
   }
@@ -114,7 +111,7 @@ export class BranchesService {
     if (!branchDB) throw new BadRequestException(`La sucursal ${id} no existe`);
     const preferences = await this._generatePreferences();
     const menu = this._generateMenu(branchDB.services);
-    const videos = this._generatePlaylist(branchDB.videos);
+    const videos = branchDB.videos.map(({ url }) => this.fileService.buildFileUrl(url, 'branches'));
     return {
       id: branchDB.id,
       name: branchDB.name,
@@ -158,11 +155,6 @@ export class BranchesService {
     return Object.values(menu);
   }
 
-  private _generatePlaylist(videos: BranchVideo[]) {
-    const host = this.configService.getOrThrow('host');
-    return videos.map((video) => `${host}/files/branch/${video.url}`);
-  }
-
   private async _generatePreferences() {
     return await this.preferenceRepository.find({
       where: { active: true },
@@ -170,7 +162,10 @@ export class BranchesService {
     });
   }
 
-  private async _plainBranch({ videos, ...props }: Branch) {
-    return { ...props, videos: this._generatePlaylist(videos) };
+  private _plainBranch({ videos, ...props }: Branch) {
+    return {
+      videos: videos.map(({ url }) => ({ name: url, url: this.fileService.buildFileUrl(url, 'branches') })),
+      ...props,
+    };
   }
 }

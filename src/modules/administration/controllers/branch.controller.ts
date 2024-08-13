@@ -27,7 +27,7 @@ export class BranchController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() category: CreateBranchDto) {
     const branch = await this.branchService.update(id, category);
-    this.branchGateway.setBranchConfig(branch.id, { videos: branch.videos, message: branch.alertVideoUrl });
+    // this.branchGateway.setBranchConfig(branch.id, { videos: branch.videos.map(()), message: branch.alertVideoUrl });
     return branch;
   }
 

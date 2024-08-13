@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { existsSync, renameSync, unlinkSync } from 'fs';
 import { join } from 'path';
@@ -6,6 +7,7 @@ import { join } from 'path';
 type ValidFolder = 'branches';
 @Injectable()
 export class FilesService {
+  constructor(private configService: ConfigService) {}
 
   getStaticBranchVideo(imageName: string) {
     const path = join(__dirname, '../../../static/branches', imageName);
@@ -20,8 +22,10 @@ export class FilesService {
     for (const file of files) {
       const tempFilePath = join(tempDir, file);
       const finalFilePath = join(finalDir, file);
-      if (!existsSync(tempFilePath)) return;
-      renameSync(tempFilePath, finalFilePath);
+      if (existsSync(tempFilePath)) {
+        console.log('file dont exist', tempFilePath);
+        renameSync(tempFilePath, finalFilePath);
+      }
     }
   }
 
@@ -30,12 +34,13 @@ export class FilesService {
 
     for (const file of files) {
       const filePath = join(tempDir, file);
-      console.log(filePath);
-      if (!existsSync(filePath)) {
-        console.log('file temp dont exist');
-        return
-      };
+      if (!existsSync(filePath)) return;
       unlinkSync(filePath);
     }
+  }
+
+  buildFileUrl(filename: string, folder: ValidFolder): string {
+    const host = this.configService.getOrThrow('host');
+    return `${host}/files/${folder}/${filename}`;
   }
 }
