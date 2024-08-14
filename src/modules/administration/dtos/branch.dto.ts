@@ -17,6 +17,7 @@ export class CreateBranchDto {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   videos: string[];
 
   @IsString()

@@ -10,7 +10,7 @@ export class FilesService {
   constructor(private configService: ConfigService) {}
 
   getStaticBranchVideo(imageName: string) {
-    const path = join(__dirname, '../../../static/branches', imageName);
+    const path = join(__dirname, '..', '..', '..', 'static','branches', imageName);
     if (!existsSync(path)) throw new BadRequestException(`No branch found with image ${imageName}`);
     return path;
   }
@@ -23,7 +23,6 @@ export class FilesService {
       const tempFilePath = join(tempDir, file);
       const finalFilePath = join(finalDir, file);
       if (existsSync(tempFilePath)) {
-        console.log('file dont exist', tempFilePath);
         renameSync(tempFilePath, finalFilePath);
       }
     }
@@ -31,11 +30,11 @@ export class FilesService {
 
   deleteFiles(files: string[], folder: ValidFolder): void {
     const tempDir = join(__dirname, '..', '..', '..', 'static', folder);
-
     for (const file of files) {
       const filePath = join(tempDir, file);
-      if (!existsSync(filePath)) return;
-      unlinkSync(filePath);
+      if (existsSync(filePath)) {
+        unlinkSync(filePath);
+      }
     }
   }
 

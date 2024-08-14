@@ -1,12 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ConfigService } from '@nestjs/config';
 import { DataSource, ILike, In, Repository } from 'typeorm';
 
-import { Branch, BranchVideo, Preference, Service } from '../entities';
 import { AnnounceDto, CreateBranchDto, UpdateBranchDto } from '../dtos';
-import { PaginationParamsDto } from 'src/common/dtos';
+import { Branch, BranchVideo, Preference, Service } from '../entities';
 import { FilesService } from 'src/modules/files/files.service';
+import { PaginationParamsDto } from 'src/common/dtos';
 
 @Injectable()
 export class BranchesService {
@@ -15,8 +14,7 @@ export class BranchesService {
     @InjectRepository(Service) private serviceRepository: Repository<Service>,
     @InjectRepository(BranchVideo) private branchVideoRepository: Repository<BranchVideo>,
     @InjectRepository(Preference) private preferenceRepository: Repository<Preference>,
-    private readonly dataSource: DataSource,
-    private configService: ConfigService,
+    private dataSource: DataSource,
     private fileService: FilesService,
   ) {}
 
@@ -52,16 +50,17 @@ export class BranchesService {
       relations: { videos: true, services: true },
     });
     if (!branchDb) throw new NotFoundException(`La sucursal ${id} no existe`);
-    let videosToDelete: string[] = [];
-
+    const files = { toDelete: [], toSave: [] };
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       if (videos) {
+        const savedVideos = branchDb.videos.map(({ url }) => url);
+        files.toDelete = savedVideos.filter((name) => !videos.includes(name));
+        files.toSave = videos.filter((name) => !savedVideos.includes(name));
         // Replace videos with new videos
         await queryRunner.manager.delete(BranchVideo, { branch: { id } });
-        videosToDelete = branchDb.videos.filter(({ url }) => !videos.includes(url)).map(({ url }) => url);
         branchDb.videos = videos.map((video) => this.branchVideoRepository.create({ url: video }));
       }
       if (services) {
@@ -71,11 +70,13 @@ export class BranchesService {
       }
       const updatedBranch = this.branchRepository.merge(branchDb, props);
       await queryRunner.manager.save(updatedBranch);
-      await queryRunner.commitTransaction();
-      this.fileService.deleteFiles(videosToDelete, 'branches');
 
-      // move temp files to folder
-      this.fileService.saveFiles(videos ?? [], 'branches');
+      // Remove unused files
+      this.fileService.deleteFiles(files.toDelete, 'branches');
+      // Move temp files to folder
+      this.fileService.saveFiles(files.toSave, 'branches');
+      
+      await queryRunner.commitTransaction();
       return this._plainBranch(updatedBranch);
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -164,7 +165,7 @@ export class BranchesService {
 
   private _plainBranch({ videos, ...props }: Branch) {
     return {
-      videos: videos.map(({ url }) => ({ name: url, url: this.fileService.buildFileUrl(url, 'branches') })),
+      videos: videos.map(({ url }) => this.fileService.buildFileUrl(url, 'branches')),
       ...props,
     };
   }

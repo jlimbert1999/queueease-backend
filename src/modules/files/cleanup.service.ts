@@ -9,6 +9,7 @@ import { join } from 'path';
 export class CleanupService {
   private readonly tempDir = join(__dirname, '..', '..', '..', 'static', 'temp');
 
+  // @Cron('*/10 * * * * *') // Ejecuta cada 10 segundos
   @Cron('0 2 * * *')
   async _cleanTempFolder(): Promise<void> {
     if (!existsSync(this.tempDir)) {
