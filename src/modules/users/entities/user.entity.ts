@@ -14,6 +14,9 @@ export class User {
   @Column()
   fullname: string;
 
+  @Column({ nullable: true })
+  jobtitle: string;
+
   @Column({
     type: 'enum',
     enum: UserRole,
