@@ -84,7 +84,7 @@ export class AttentionService {
       await queryRunner.commitTransaction();
       return { serviceRequest: requestToAttend, startTime, endTime };
     } catch (error) {
-      this._handleTransactionError(error, queryRunner);
+      await this._handleTransactionError(error, queryRunner);
     } finally {
       await queryRunner.release();
     }
@@ -105,7 +105,7 @@ export class AttentionService {
       await queryRunner.commitTransaction();
       return { endTime };
     } catch (error) {
-      this._handleTransactionError(error, queryRunner);
+      await this._handleTransactionError(error, queryRunner);
     } finally {
       await queryRunner.release();
     }
@@ -126,6 +126,7 @@ export class AttentionService {
     if (error instanceof HttpException) {
       throw new HttpException(error.message, error.getStatus());
     }
+    console.log(error);
     throw new InternalServerErrorException('Error al atender la solicitud');
   }
 }
